@@ -37,7 +37,7 @@ namespace KitchenServiceV2
             var db = Configuration.GetSection("mongoDb").Value;
 
             services.AddScoped<IDbContext, DbContext>(ctx => new DbContext(conn, db));
-            services.AddScoped<IRepository<Account>, AccountRepository>();
+            services.AddScoped<IAccountRepository, AccountRepository>();
 
             services.AddMvc();
             services.AddCors();

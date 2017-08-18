@@ -5,14 +5,14 @@ using KitchenServiceV2.Db.Mongo.Schema;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace KitchenServiceV2.Db.Mongo
+namespace KitchenServiceV2.Db.Mongo.Repository
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : IDocument
     {
         private readonly string _collectionName;
         private readonly IDbContext _context;
 
-        private IMongoCollection<TEntity> Collection => this._context.Db.GetCollection<TEntity>(this._collectionName);
+        protected IMongoCollection<TEntity> Collection => this._context.Db.GetCollection<TEntity>(this._collectionName);
 
         public Repository(IDbContext context, string collectionName)
         {
