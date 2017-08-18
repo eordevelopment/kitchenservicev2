@@ -6,9 +6,6 @@ namespace KitchenServiceV2.Contract
     public class RecipeStepDto
     {
         [DataMember]
-        public string Id { get; set; }
-
-        [DataMember]
         public int StepNumber { get; set; }
 
         [DataMember]

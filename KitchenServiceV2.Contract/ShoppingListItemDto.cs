@@ -6,9 +6,6 @@ namespace KitchenServiceV2.Contract
     public class ShoppingListItemDto
     {
         [DataMember]
-        public string Id { get; set; }
-
-        [DataMember]
         public float Amount { get; set; }
 
         [DataMember]
@@ -16,9 +13,6 @@ namespace KitchenServiceV2.Contract
 
         [DataMember]
         public bool IsDone { get; set; }
-
-        [DataMember]
-        public bool IsOptional { get; set; }
 
         [DataMember]
         public ItemDto Item { get; set; }

@@ -1,23 +1,11 @@
-﻿using System.Runtime.Serialization;
-
-namespace KitchenServiceV2.Contract
+﻿namespace KitchenServiceV2.Db.Mongo.Schema
 {
-    [DataContract]
-    public class RecipeItemDto
+    public class RecipeItem
     {
-        [DataMember]
         public string Name { get; set; }
-
-        [DataMember]
         public float Quantity { get; set; }
-
-        [DataMember]
         public string UnitType { get; set; }
-
-        [DataMember]
         public float Amount { get; set; }
-
-        [DataMember]
         public string Instructions { get; set; }
     }
 }
