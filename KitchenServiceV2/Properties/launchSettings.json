@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "KitchenServiceV2": {
+        "commandName": "Project",
+        "launchBrowser": true,
+        "launchUrl": "api/status",
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "applicationUrl": "http://localhost:57235/"
+    }
+  }
+}
