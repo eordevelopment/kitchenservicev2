@@ -3,3 +3,16 @@
 ################################################################################
 
 /KitchenServiceV2/bin/Debug/netcoreapp2.0
+/KitchenServiceV2/obj/Debug/netcoreapp2.0
+/KitchenServiceV2/obj
+/KitchenServiceV2.Contract/bin/Debug/netcoreapp2.0
+/KitchenServiceV2.Contract/obj/Debug/netcoreapp2.0
+/KitchenServiceV2.Contract/obj
+/KitchenServiceV2.Db.Mongo/bin/Debug/netcoreapp2.0
+/KitchenServiceV2.Db.Mongo/obj/Debug/netcoreapp2.0
+/KitchenServiceV2.Db.Mongo/obj
+/KitchenServiceV2.Tests/bin/Debug/netcoreapp2.0
+/KitchenServiceV2.Tests/obj/Debug/netcoreapp2.0
+/KitchenServiceV2.Tests/obj
+/.vs/KitchenServiceV2/v15/sqlite3/storage.ide
+/.vs/KitchenServiceV2/v15/.suo
