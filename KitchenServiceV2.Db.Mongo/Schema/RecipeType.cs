@@ -5,6 +5,10 @@ namespace KitchenServiceV2.Db.Mongo.Schema
 {
     public class RecipeType : IDocument
     {
+        public RecipeType()
+        {
+            this.RecipeIds = new List<ObjectId>();
+        }
         public string Name { get; set; }
         public List<ObjectId> RecipeIds { get; set; }
         public ObjectId Id { get; set; }
