@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using AutoMapper;
+using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Repository;
 using KitchenServiceV2.Db.Mongo.Schema;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 
 namespace KitchenServiceV2
 {
@@ -38,6 +41,21 @@ namespace KitchenServiceV2
 
             services.AddScoped<IDbContext, DbContext>(ctx => new DbContext(conn, db));
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IItemRepository, ItemRepository>();
+            services.AddScoped<IRecipeTypeRepository, RecipeTypeRepository>();
+            services.AddScoped<IRecipeRepository, RecipeRepository>();
+
+            // Auto mapper
+            Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<Category, CategoryDto>();
+                cfg.CreateMap<Item, ItemDto>();
+
+
+                cfg.CreateMap<string, ObjectId>().ConvertUsing(s => new ObjectId(s));
+                cfg.CreateMap<ObjectId, string>().ConvertUsing(id => id.ToString());
+            });
 
             services.AddMvc();
             services.AddCors();
