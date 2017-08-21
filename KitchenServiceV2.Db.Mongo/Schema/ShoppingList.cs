@@ -12,5 +12,6 @@ namespace KitchenServiceV2.Db.Mongo.Schema
         public List<ShoppingListItem> Items { get; set; }
         public List<ShoppingListItem> OptionalItems { get; set; }
         public ObjectId Id { get; set; }
+        public string UserToken { get; set; }
     }
 }

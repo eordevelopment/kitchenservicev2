@@ -10,5 +10,6 @@ namespace KitchenServiceV2.Db.Mongo.Schema
         public bool IsDone { get; set; }
         public List<PlanItem> PlanItems { get; set; }
         public ObjectId Id { get; set; }
+        public string UserToken { get; set; }
     }
 }

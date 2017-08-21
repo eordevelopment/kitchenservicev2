@@ -5,5 +5,6 @@ namespace KitchenServiceV2.Db.Mongo.Schema
     public interface IDocument
     {
         ObjectId Id { get; set; }
+        string UserToken { get; set; }
     }
 }

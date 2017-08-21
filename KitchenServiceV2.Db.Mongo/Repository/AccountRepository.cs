@@ -12,17 +12,17 @@ namespace KitchenServiceV2.Db.Mongo.Repository
 
         public Task<Account> FindByToken(string token)
         {
-            return this.Collection.Find(x => x.Token == token).FirstOrDefaultAsync();
+            return this.Collection.Find(x => x.UserToken == token).FirstOrDefaultAsync();
         }
 
         public Task<Account> GetUser(string userName)
         {
-            return this.Collection.Find(x => x.UserName == userName).FirstOrDefaultAsync();
+            return this.Collection.Find(x => x.UserName == userName.ToLower()).FirstOrDefaultAsync();
         }
 
         public Task<Account> GetUser(string userName, string hashedPassword)
         {
-            return this.Collection.Find(x => x.UserName == userName && x.HashedPassword == hashedPassword).FirstOrDefaultAsync();
+            return this.Collection.Find(x => x.UserName == userName.ToLower() && x.HashedPassword == hashedPassword).FirstOrDefaultAsync();
         }
     }
 }

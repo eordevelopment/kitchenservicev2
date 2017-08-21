@@ -3,7 +3,7 @@ using MongoDB.Bson;
 
 namespace KitchenServiceV2.Db.Mongo.Schema
 {
-    public class RecipeDto : IDocument
+    public class Recipe : IDocument
     {
         public string Name { get; set; }
         public string Key { get; set; }
@@ -11,5 +11,6 @@ namespace KitchenServiceV2.Db.Mongo.Schema
         public List<RecipeStep> RecipeSteps { get; set; }
         public List<RecipeItem> RecipeItems { get; set; }
         public ObjectId Id { get; set; }
+        public string UserToken { get; set; }
     }
 }
