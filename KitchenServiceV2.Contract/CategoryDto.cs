@@ -6,6 +6,10 @@ namespace KitchenServiceV2.Contract
     [DataContract]
     public class CategoryDto
     {
+        public CategoryDto()
+        {
+            this.Items = new List<ItemDto>();
+        }
         [DataMember]
         public string Id { get; set; }
 

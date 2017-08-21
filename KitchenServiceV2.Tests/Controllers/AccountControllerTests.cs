@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Controllers;
-using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Schema;
 using Moq;
 using Xunit;
@@ -10,14 +9,14 @@ using Xunit.Abstractions;
 
 namespace KitchenServiceV2.Tests.Controllers
 {
-    public class AccountControllerTests
+    public class AccountControllerTests : BaseControllerTests
     {
         private readonly AccountController _sut;
-        private readonly Mock<IAccountRepository> _accountRepositoryMock = new Mock<IAccountRepository>(MockBehavior.Strict);
+        
 
         public AccountControllerTests(ITestOutputHelper output)
         {
-            this._sut = new AccountController(_accountRepositoryMock.Object);
+            this._sut = new AccountController(this.AccountRepositoryMock.Object);
         }
 
         [Fact]
@@ -28,7 +27,7 @@ namespace KitchenServiceV2.Tests.Controllers
             if (exceptionAsync != null)
             {
                 var exception = await exceptionAsync;
-                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.IsType(typeof(ArgumentException), exception);
                 Assert.Equal("Username and/or password cannot be empty", exception.Message);
             }
         }
@@ -36,7 +35,7 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task RegisterUserAlreadyExistsShouldThrow()
         {
-            this._accountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync(new Account());
+            this.AccountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync(new Account());
 
             var postData = new AccountDto
             {
@@ -55,8 +54,8 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task RegisterShouldSave()
         {
-            this._accountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync((Account)null);
-            this._accountRepositoryMock.Setup(x => x.Insert(It.IsAny<Account>())).Returns(Task.FromResult(true));
+            this.AccountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync((Account)null);
+            this.AccountRepositoryMock.Setup(x => x.Insert(It.IsAny<Account>())).Returns(Task.FromResult(true));
 
             var postData = new AccountDto
             {
@@ -69,7 +68,7 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.NotNull(result);
 
             // verify that UserName is converted to lower case
-            this._accountRepositoryMock
+            this.AccountRepositoryMock
                 .Verify(x => x.Insert(It.Is<Account>(y => y.HashedPassword == "password" && y.UserName == "username")), Times.Once);
         }
 
@@ -81,7 +80,7 @@ namespace KitchenServiceV2.Tests.Controllers
             if (exceptionAsync != null)
             {
                 var exception = await exceptionAsync;
-                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.IsType(typeof(ArgumentException), exception);
                 Assert.Equal("Username and/or password cannot be empty", exception.Message);
             }
         }
@@ -89,7 +88,7 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task LoginNoAccountShouldThrow()
         {
-            this._accountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((Account)null);
+            this.AccountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((Account)null);
 
             var postData = new AccountDto
             {
@@ -108,7 +107,7 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task LoginValidAccount()
         {
-            this._accountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>(), It.IsAny<string>()))
+            this.AccountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(new Account
                 {
                     UserToken = Guid.NewGuid().ToString()

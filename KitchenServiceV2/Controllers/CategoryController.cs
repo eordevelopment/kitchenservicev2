@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
+using KitchenServiceV2.Db.Mongo.Schema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -29,7 +30,7 @@ namespace KitchenServiceV2.Controllers
         {
             var categories = await this._categoryRepository.GetAll(this.LoggedInUserToken);
 
-            return categories.Select(Mapper.Map<CategoryDto>).ToList();
+            return categories == null ? new List<CategoryDto>() : categories.Select(Mapper.Map<CategoryDto>).ToList();
         }
 
         [HttpGet("{id}")]
@@ -52,6 +53,103 @@ namespace KitchenServiceV2.Controllers
                 return result;
             }
             throw new ArgumentException($"No resource with id: {id}");
+        }
+
+        [HttpPost]
+        public async Task Post([FromBody] CategoryDto value)
+        {
+            ValidateCategory(value);
+
+            var existingCategory = await this._categoryRepository.Find(LoggedInUserToken, value.Name);
+            if (existingCategory != null)
+            {
+                throw new InvalidOperationException("Category already exists.");
+            }
+
+            var category = await this.PopulateCategory(value);
+
+            // save the category
+            await this._categoryRepository.Insert(category);
+        }
+
+        [HttpPut("{id}")]
+        public async Task Put(string id, [FromBody] CategoryDto value)
+        {
+            ValidateCategory(value);
+
+            var categoryId = new ObjectId(id);
+            var existingCategory = await this._categoryRepository.Get(categoryId);
+            if (existingCategory == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+
+            var category = await this.PopulateCategory(value);
+            category.Id = categoryId;
+
+            // save the category
+            await this._categoryRepository.Update(category);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task Delete(string id)
+        {
+            var categoryId = new ObjectId(id);
+            var existingCategory = await this._categoryRepository.Get(categoryId);
+            if (existingCategory == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+            else
+            {
+                await this._categoryRepository.Remove(categoryId);
+            }
+        }
+
+        private async Task<Category> PopulateCategory(CategoryDto value)
+        {
+            var category = Mapper.Map<Category>(value);
+            category.ItemIds = new List<ObjectId>();
+            category.UserToken = LoggedInUserToken;
+
+            if (value.Items != null)
+            {
+                var items = value.Items.Select(x =>
+                {
+                    var itm = Mapper.Map<Item>(x);
+                    itm.UserToken = LoggedInUserToken;
+                    return itm;
+                }).ToList();
+
+                var newItems = items.Where(x => x.Id == ObjectId.Empty).ToList();
+                var existingItems = items.Where(x => x.Id != ObjectId.Empty).ToList();
+
+                // bulk insert the new items
+                await this._itemRepository.Insert(newItems);
+                category.ItemIds.AddRange(existingItems.Select(x => x.Id));
+
+                // update the existing items.
+                foreach (var item in existingItems)
+                {
+                    await this._itemRepository.Update(item);
+                    category.ItemIds.Add(item.Id);
+                }
+            }
+
+            return category;
+        }
+
+        [NonAction]
+        private static void ValidateCategory(CategoryDto value)
+        {
+            if (string.IsNullOrWhiteSpace(value.Name))
+            {
+                throw new InvalidOperationException("Name cannot be empty");
+            }
+            if (value.Items != null && value.Items.Any(x => string.IsNullOrWhiteSpace(x.Name)))
+            {
+                throw new InvalidOperationException("Item Name cannot be empty");
+            }
         }
     }
 }

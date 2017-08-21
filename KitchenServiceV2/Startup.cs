@@ -47,15 +47,7 @@ namespace KitchenServiceV2
             services.AddScoped<IRecipeRepository, RecipeRepository>();
 
             // Auto mapper
-            Mapper.Initialize(cfg =>
-            {
-                cfg.CreateMap<Category, CategoryDto>();
-                cfg.CreateMap<Item, ItemDto>();
-
-
-                cfg.CreateMap<string, ObjectId>().ConvertUsing(s => new ObjectId(s));
-                cfg.CreateMap<ObjectId, string>().ConvertUsing(id => id.ToString());
-            });
+            InitializeMapper();
 
             services.AddMvc();
             services.AddCors();
@@ -76,6 +68,22 @@ namespace KitchenServiceV2
 
             app.UseMiddleware(typeof(ErrorHandlingMiddleware));
             app.UseMvc();
+        }
+
+        public static void InitializeMapper()
+        {
+            Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<Category, CategoryDto>();
+                cfg.CreateMap<CategoryDto, Category>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
+
+                cfg.CreateMap<Item, ItemDto>();
+                cfg.CreateMap<ItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
+
+
+                cfg.CreateMap<string, ObjectId>().ConvertUsing(s => string.IsNullOrWhiteSpace(s) ? ObjectId.Empty : new ObjectId(s));
+                cfg.CreateMap<ObjectId, string>().ConvertUsing(id => id.ToString());
+            });
         }
     }
 }

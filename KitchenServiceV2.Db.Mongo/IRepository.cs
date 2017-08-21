@@ -13,6 +13,7 @@ namespace KitchenServiceV2.Db.Mongo
         Task<TEntity> Get(ObjectId id);
         Task<List<TEntity>> Get(IReadOnlyCollection<ObjectId> ids);
         Task Insert(TEntity p);
+        Task Insert(IReadOnlyCollection<TEntity> entities);
         Task Update(TEntity entity);
         Task Remove(TEntity entity);
         Task Remove(ObjectId id);

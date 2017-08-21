@@ -22,7 +22,7 @@ namespace KitchenServiceV2.Controllers
         {
             if (string.IsNullOrWhiteSpace(value.UserName) || string.IsNullOrWhiteSpace(value.HashedPassword))
             {
-                throw new InvalidOperationException("Username and/or password cannot be empty");
+                throw new ArgumentException("Username and/or password cannot be empty");
             }
 
             var existingAccount = await this._repository.GetUser(value.UserName);
@@ -47,7 +47,7 @@ namespace KitchenServiceV2.Controllers
         {
             if (string.IsNullOrWhiteSpace(value.UserName) || string.IsNullOrWhiteSpace(value.HashedPassword))
             {
-                throw new InvalidOperationException("Username and/or password cannot be empty");
+                throw new ArgumentException("Username and/or password cannot be empty");
             }
 
             var account = await this._repository.GetUser(value.UserName, value.HashedPassword);

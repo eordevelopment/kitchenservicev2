@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Repository;
 using KitchenServiceV2.Db.Mongo.Schema;
+using MongoDB.Bson;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,6 +24,7 @@ namespace KitchenServiceV2.Tests.Database
         {
             var item = new Item
             {
+                Id = ObjectId.Empty,
                 UserToken = "Token123",
                 Name = "test item",
                 Quantity = 10,
@@ -92,6 +95,36 @@ namespace KitchenServiceV2.Tests.Database
             var dbItems = await this._sut.SearchItems("Token123", "test", 10);
             Assert.NotNull(dbItems);
             Assert.True(dbItems.Count == 10);
+        }
+
+        [Fact]
+        public async Task CanBulkInsert()
+        {
+            var items = new List<Item>
+            {
+                new Item
+                {
+                    Id = ObjectId.Empty,
+                    UserToken = "Token123",
+                    Name = "test item 1",
+                    Quantity = 10,
+                    UnitType = "ml"
+                },
+                new Item
+                {
+                    Id = ObjectId.Empty,
+                    UserToken = "Token123",
+                    Name = "test item 2",
+                    Quantity = 20,
+                    UnitType = "ml"
+                }
+            };
+
+            await this._sut.Insert(items);
+            foreach (var item in items)
+            {
+                Assert.NotEqual(ObjectId.Empty, item.Id);
+            }
         }
     }
 }
