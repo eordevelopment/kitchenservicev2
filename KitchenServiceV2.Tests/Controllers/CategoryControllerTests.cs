@@ -17,7 +17,7 @@ namespace KitchenServiceV2.Tests.Controllers
         private readonly CategoryController _sut;
         
 
-        public CategoryControllerTests(ITestOutputHelper output)
+        public CategoryControllerTests(ITestOutputHelper output) : base(output)
         {
             this._sut = new CategoryController(this.CategoriyRepositoryMock.Object, this.ItemRepositoryMock.Object);
             this.SetupController(this._sut);         
@@ -195,7 +195,7 @@ namespace KitchenServiceV2.Tests.Controllers
         }
 
         [Fact]
-        public async Task PutEmptyNameShouldThro()
+        public async Task PutEmptyNameShouldThrow()
         {
             var exceptionAsync = Record.ExceptionAsync(() => this._sut.Put("id", new CategoryDto()));
             if (exceptionAsync != null)
@@ -207,7 +207,7 @@ namespace KitchenServiceV2.Tests.Controllers
         }
 
         [Fact]
-        public async Task PutEmptyItemShouldThro()
+        public async Task PutEmptyItemShouldThrow()
         {
             var exceptionAsync = Record.ExceptionAsync(() => this._sut.Put("id", new CategoryDto
             {
@@ -226,7 +226,7 @@ namespace KitchenServiceV2.Tests.Controllers
         }
 
         [Fact]
-        public async Task PostEmptyNameShouldThro()
+        public async Task PostEmptyNameShouldThrow()
         {
             var exceptionAsync = Record.ExceptionAsync(() => this._sut.Post(new CategoryDto()));
             if (exceptionAsync != null)
@@ -238,7 +238,7 @@ namespace KitchenServiceV2.Tests.Controllers
         }
 
         [Fact]
-        public async Task PostEmptyItemShouldThro()
+        public async Task PostEmptyItemShouldThrow()
         {
             var exceptionAsync = Record.ExceptionAsync(() => this._sut.Post(new CategoryDto
             {
@@ -347,6 +347,29 @@ namespace KitchenServiceV2.Tests.Controllers
                 .Verify(x => x.Update(It.Is<Item>(itm =>
                     itm.Id.ToString() == "599a98f185142b3ce0f9659d" &&
                     itm.Name == "existing item 2"
+                )), Times.Once);
+        }
+
+        [Fact]
+        public async Task PutShouldSave()
+        {
+            this.CategoriyRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new Category());
+
+            this.CategoriyRepositoryMock.Setup(x => x.Update(It.IsAny<Category>())).Returns(Task.FromResult(true));
+
+            await this._sut.Put("599a98f185142b3ce0f96598", new CategoryDto
+            {
+                Id = "599a98f185142b3ce0f96598",
+                Name = "Test Type"
+            });
+
+
+            this.CategoriyRepositoryMock
+                .Verify(x => x.Update(It.Is<Category>(rt =>
+                    rt.Name == "test type" &&
+                    rt.Id.ToString() == "599a98f185142b3ce0f96598" &&
+                    rt.UserToken == "UserToken"
                 )), Times.Once);
         }
     }

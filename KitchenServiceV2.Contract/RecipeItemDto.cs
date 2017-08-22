@@ -19,5 +19,8 @@ namespace KitchenServiceV2.Contract
 
         [DataMember]
         public string Instructions { get; set; }
+
+        [DataMember]
+        public string ItemId { get; set; }
     }
 }

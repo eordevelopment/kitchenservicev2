@@ -14,7 +14,7 @@ namespace KitchenServiceV2.Tests.Controllers
         private readonly AccountController _sut;
         
 
-        public AccountControllerTests(ITestOutputHelper output)
+        public AccountControllerTests(ITestOutputHelper output) : base(output)
         {
             this._sut = new AccountController(this.AccountRepositoryMock.Object);
         }

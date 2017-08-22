@@ -64,8 +64,6 @@ namespace KitchenServiceV2
                 .ToArray();
             app.UseCors(builder => builder.WithOrigins(origins).AllowAnyMethod().AllowAnyHeader());
 
-            //loggerFactory.AddConsole(LogLevel.Debug).AddDebug(LogLevel.Debug);
-
             app.UseMiddleware(typeof(ErrorHandlingMiddleware));
             app.UseMvc();
         }
@@ -80,8 +78,29 @@ namespace KitchenServiceV2
                 cfg.CreateMap<Item, ItemDto>();
                 cfg.CreateMap<ItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
 
+                cfg.CreateMap<RecipeType, RecipeTypeDto>();
+                cfg.CreateMap<RecipeTypeDto, RecipeType>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
 
-                cfg.CreateMap<string, ObjectId>().ConvertUsing(s => string.IsNullOrWhiteSpace(s) ? ObjectId.Empty : new ObjectId(s));
+                cfg.CreateMap<Recipe, RecipeDto>();
+                cfg.CreateMap<RecipeDto, Recipe>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
+
+                cfg.CreateMap<RecipeStep, RecipeStepDto>();
+                cfg.CreateMap<RecipeStepDto, RecipeStep>();
+                cfg.CreateMap<RecipeItem, RecipeItemDto>();
+                cfg.CreateMap<RecipeItemDto, RecipeItem>();
+
+
+                cfg.CreateMap<string, ObjectId>().ConvertUsing(s =>
+                {
+                    if (string.IsNullOrWhiteSpace(s)) return ObjectId.Empty;
+
+                    ObjectId id;
+                    if (ObjectId.TryParse(s, out id))
+                    {
+                        return id;
+                    }
+                    return ObjectId.Empty;
+                });
                 cfg.CreateMap<ObjectId, string>().ConvertUsing(id => id.ToString());
             });
         }

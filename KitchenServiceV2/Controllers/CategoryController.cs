@@ -29,7 +29,6 @@ namespace KitchenServiceV2.Controllers
         public async Task<List<CategoryDto>> Get()
         {
             var categories = await this._categoryRepository.GetAll(this.LoggedInUserToken);
-
             return categories == null ? new List<CategoryDto>() : categories.Select(Mapper.Map<CategoryDto>).ToList();
         }
 
@@ -43,16 +42,14 @@ namespace KitchenServiceV2.Controllers
 
             var objectId = new ObjectId(id);
             var category = await this._categoryRepository.Get(objectId);
-            if (category != null)
-            {
-                var items = await this._itemRepository.Get(category.ItemIds);
+            if (category == null) throw new ArgumentException($"No resource with id: {id}");
 
-                var result = Mapper.Map<CategoryDto>(category);
-                result.Items = items.Select(Mapper.Map<ItemDto>).ToList();
+            var items = await this._itemRepository.Get(category.ItemIds);
 
-                return result;
-            }
-            throw new ArgumentException($"No resource with id: {id}");
+            var result = Mapper.Map<CategoryDto>(category);
+            result.Items = items.Select(Mapper.Map<ItemDto>).ToList();
+
+            return result;
         }
 
         [HttpPost]
@@ -100,10 +97,7 @@ namespace KitchenServiceV2.Controllers
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
-            else
-            {
-                await this._categoryRepository.Remove(categoryId);
-            }
+            await this._categoryRepository.Remove(categoryId);
         }
 
         private async Task<Category> PopulateCategory(CategoryDto value)
@@ -112,28 +106,27 @@ namespace KitchenServiceV2.Controllers
             category.ItemIds = new List<ObjectId>();
             category.UserToken = LoggedInUserToken;
 
-            if (value.Items != null)
+            if (value.Items == null || !value.Items.Any()) return category;
+
+            var items = value.Items.Select(x =>
             {
-                var items = value.Items.Select(x =>
-                {
-                    var itm = Mapper.Map<Item>(x);
-                    itm.UserToken = LoggedInUserToken;
-                    return itm;
-                }).ToList();
+                var itm = Mapper.Map<Item>(x);
+                itm.UserToken = LoggedInUserToken;
+                return itm;
+            }).ToList();
 
-                var newItems = items.Where(x => x.Id == ObjectId.Empty).ToList();
-                var existingItems = items.Where(x => x.Id != ObjectId.Empty).ToList();
+            var newItems = items.Where(x => x.Id == ObjectId.Empty).ToList();
+            var existingItems = items.Where(x => x.Id != ObjectId.Empty).ToList();
 
-                // bulk insert the new items
-                await this._itemRepository.Insert(newItems);
-                category.ItemIds.AddRange(existingItems.Select(x => x.Id));
+            // bulk insert the new items
+            await this._itemRepository.Insert(newItems);
+            category.ItemIds.AddRange(existingItems.Select(x => x.Id));
 
-                // update the existing items.
-                foreach (var item in existingItems)
-                {
-                    await this._itemRepository.Update(item);
-                    category.ItemIds.Add(item.Id);
-                }
+            // update the existing items.
+            foreach (var item in existingItems)
+            {
+                await this._itemRepository.Update(item);
+                category.ItemIds.Add(item.Id);
             }
 
             return category;

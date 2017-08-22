@@ -3,6 +3,7 @@ using KitchenServiceV2.Db.Mongo;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Xunit.Abstractions;
 
 namespace KitchenServiceV2.Tests.Controllers
 {
@@ -11,9 +12,14 @@ namespace KitchenServiceV2.Tests.Controllers
         protected readonly Mock<IAccountRepository> AccountRepositoryMock = new Mock<IAccountRepository>(MockBehavior.Strict);
         protected readonly Mock<ICategoryRepository> CategoriyRepositoryMock = new Mock<ICategoryRepository>(MockBehavior.Strict);
         protected readonly Mock<IItemRepository> ItemRepositoryMock = new Mock<IItemRepository>(MockBehavior.Strict);
+        protected readonly Mock<IRecipeTypeRepository> RecipeTypeRepositoryMock = new Mock<IRecipeTypeRepository>(MockBehavior.Strict);
+        protected readonly Mock<IRecipeRepository> RecipeRepositoryMock = new Mock<IRecipeRepository>(MockBehavior.Strict);
 
-        public BaseControllerTests()
+        protected ITestOutputHelper Output;
+
+        public BaseControllerTests(ITestOutputHelper output)
         {
+            this.Output = output;
             Startup.InitializeMapper();
         }
         protected void SetupController(BaseController controller)
