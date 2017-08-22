@@ -120,14 +120,11 @@ namespace KitchenServiceV2.Controllers
 
             // bulk insert the new items
             await this._itemRepository.Insert(newItems);
-            category.ItemIds.AddRange(existingItems.Select(x => x.Id));
+            category.ItemIds.AddRange(newItems.Select(x => x.Id));
 
-            // update the existing items.
-            foreach (var item in existingItems)
-            {
-                await this._itemRepository.Update(item);
-                category.ItemIds.Add(item.Id);
-            }
+            // bulk update the existing items.
+            await this._itemRepository.Update(existingItems);
+            category.ItemIds.AddRange(existingItems.Select(x => x.Id));
 
             return category;
         }

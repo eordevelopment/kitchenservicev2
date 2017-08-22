@@ -12,9 +12,10 @@ namespace KitchenServiceV2.Db.Mongo
         Task<List<TEntity>> GetAll(string userToken);
         Task<TEntity> Get(ObjectId id);
         Task<List<TEntity>> Get(IReadOnlyCollection<ObjectId> ids);
-        Task Insert(TEntity p);
+        Task Insert(TEntity e);
         Task Insert(IReadOnlyCollection<TEntity> entities);
         Task Update(TEntity entity);
+        Task Update(IReadOnlyCollection<TEntity> entities);
         Task Remove(TEntity entity);
         Task Remove(ObjectId id);
     }

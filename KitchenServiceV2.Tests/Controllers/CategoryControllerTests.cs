@@ -284,7 +284,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
             this.CategoriyRepositoryMock.Setup(x => x.Insert(It.IsAny<Category>())).Returns(Task.FromResult(true));
             this.ItemRepositoryMock.Setup(x => x.Insert(It.IsAny<IReadOnlyCollection<Item>>())).Returns(Task.FromResult(true));
-            this.ItemRepositoryMock.Setup(x => x.Update(It.IsAny<Item>()))
+            this.ItemRepositoryMock.Setup(x => x.Update(It.IsAny<IReadOnlyCollection<Item>>()))
                 .Returns(Task.FromResult(true));
 
             var category = new CategoryDto
@@ -327,7 +327,9 @@ namespace KitchenServiceV2.Tests.Controllers
                 .Verify(x => x.Insert(It.Is<Category>(cat =>
                     cat.Name == "test category" &&
                     cat.UserToken == "UserToken" &&
-                    cat.ItemIds.Count == 4
+                    cat.ItemIds.Count == 4 &&
+                    cat.ItemIds.Count(i => i.ToString() == "599a98f185142b3ce0f9659c") == 1 &&
+                    cat.ItemIds.Count(i => i.ToString() == "599a98f185142b3ce0f9659d") == 1
                 )), Times.Once);
 
             this.ItemRepositoryMock
@@ -338,15 +340,9 @@ namespace KitchenServiceV2.Tests.Controllers
                 )), Times.Once);
 
             this.ItemRepositoryMock
-                .Verify(x => x.Update(It.Is<Item>(itm =>
-                    itm.Id.ToString() == "599a98f185142b3ce0f9659c" &&
-                    itm.Name == "existing item 1"
-                )), Times.Once);
-
-            this.ItemRepositoryMock
-                .Verify(x => x.Update(It.Is<Item>(itm =>
-                    itm.Id.ToString() == "599a98f185142b3ce0f9659d" &&
-                    itm.Name == "existing item 2"
+                .Verify(x => x.Update(It.Is<IReadOnlyCollection<Item>>(itms =>
+                    itms.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659c" && itm.Name == "existing item 1") &&
+                    itms.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659d" && itm.Name == "existing item 2")
                 )), Times.Once);
         }
 
