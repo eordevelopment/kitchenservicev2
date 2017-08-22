@@ -1,9 +1,10 @@
-﻿using KitchenServiceV2.Db.Mongo;
+﻿using System;
+using KitchenServiceV2.Db.Mongo;
 using Xunit.Abstractions;
 
 namespace KitchenServiceV2.Tests.Database
 {
-    public class BaseDatabaseTests
+    public class BaseDatabaseTests : IDisposable
     {
         protected string CollectionName;
 

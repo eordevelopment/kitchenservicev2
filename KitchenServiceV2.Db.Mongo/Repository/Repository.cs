@@ -45,20 +45,19 @@ namespace KitchenServiceV2.Db.Mongo.Repository
             return this.Update(e);
         }
 
-        public Task Upsert(IReadOnlyCollection<TEntity> entities)
+        public async Task Upsert(IReadOnlyCollection<TEntity> entities)
         {
             var newItems = entities.Where(x => x.Id == ObjectId.Empty).ToList();
             var existingItems = entities.Where(x => x.Id != ObjectId.Empty).ToList();
 
             if (newItems.Any())
             {
-                return this.Insert(newItems);
+                await this.Insert(newItems);
             }
             if (existingItems.Any())
             {
-                return this.Update(existingItems);
+                await this.Update(existingItems);
             }
-            return Task.CompletedTask;
         }
 
         public Task Remove(TEntity entity)
