@@ -26,7 +26,7 @@ namespace KitchenServiceV2.Tests.Database
                 UserToken = "Token123",
                 UserName = "testuser"
             };
-            await this._sut.Insert(account);
+            await this._sut.Upsert(account);
             Assert.NotNull(account.Id);
 
             var dbAccount = await this._sut.FindByToken("Token123");
@@ -45,7 +45,7 @@ namespace KitchenServiceV2.Tests.Database
                 UserToken = "Token123",
                 UserName = "testuser"
             };
-            await this._sut.Insert(account);
+            await this._sut.Upsert(account);
             Assert.NotNull(account.Id);
 
             var dbAccount = await this._sut.GetUser("TestUser");
@@ -64,7 +64,7 @@ namespace KitchenServiceV2.Tests.Database
                 UserToken = "Token123",
                 UserName = "testuser"
             };
-            await this._sut.Insert(account);
+            await this._sut.Upsert(account);
             Assert.NotNull(account.Id);
 
             var dbAccount = await this._sut.GetUser("TestUser", "HashPass");

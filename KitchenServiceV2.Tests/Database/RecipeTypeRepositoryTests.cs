@@ -25,7 +25,7 @@ namespace KitchenServiceV2.Tests.Database
                 UserToken = "Token123",
                 Name = "test item"
             };
-            await this._sut.Insert(recipeType);
+            await this._sut.Upsert(recipeType);
             Assert.NotNull(recipeType.Id);
 
             var dbRecipeType = await this._sut.Find("Token123", "Test Item");

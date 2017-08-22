@@ -30,7 +30,7 @@ namespace KitchenServiceV2.Tests.Database
                 Quantity = 10,
                 UnitType = "ml"
             };
-            await this._sut.Insert(item);
+            await this._sut.Upsert(item);
             Assert.NotNull(item.Id);
 
             var dbItem = await this._sut.FindItem("Token123", "Test Item");
@@ -50,7 +50,7 @@ namespace KitchenServiceV2.Tests.Database
                 Quantity = 10,
                 UnitType = "ml"
             };
-            await this._sut.Insert(item);
+            await this._sut.Upsert(item);
             Assert.NotNull(item.Id);
 
             var dbItems = await this._sut.SearchItems("Token123", "test item", 10);
@@ -68,7 +68,7 @@ namespace KitchenServiceV2.Tests.Database
                 Quantity = 10,
                 UnitType = "ml"
             };
-            await this._sut.Insert(item);
+            await this._sut.Upsert(item);
             Assert.NotNull(item.Id);
 
             var dbItems = await this._sut.SearchItems("Token123", "test", 10);
@@ -88,7 +88,7 @@ namespace KitchenServiceV2.Tests.Database
                     Quantity = 10,
                     UnitType = "ml"
                 };
-                await this._sut.Insert(item);
+                await this._sut.Upsert(item);
                 Assert.NotNull(item.Id);
             }
 
@@ -120,7 +120,7 @@ namespace KitchenServiceV2.Tests.Database
                 }
             };
 
-            await this._sut.Insert(items);
+            await this._sut.Upsert(items);
             foreach (var item in items)
             {
                 Assert.NotEqual(ObjectId.Empty, item.Id);

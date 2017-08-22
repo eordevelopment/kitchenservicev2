@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo.Schema;
@@ -36,21 +37,57 @@ namespace KitchenServiceV2.Db.Mongo.Repository
             return this.Collection.Find(p => ids.Contains(p.Id)).ToListAsync();
         }
 
+        public Task Upsert(TEntity e)
+        {
+            if (e.Id == ObjectId.Empty)
+            {
+                return this.Collection.InsertOneAsync(e);
+            }
+            return this.Collection.ReplaceOneAsync(p => p.Id == e.Id, e);
+        }
+
+        public Task Upsert(IReadOnlyCollection<TEntity> entities)
+        {
+            var newItems = entities.Where(x => x.Id == ObjectId.Empty);
+            var existingItems = entities.Where(x => x.Id != ObjectId.Empty);
+
+            if (newItems.Any())
+            {
+                return this.Collection.InsertManyAsync(entities);
+            }
+            if (existingItems.Any())
+            {
+                var writeModels = new List<WriteModel<TEntity>>();
+                foreach (var entity in entities)
+                {
+                    var filter = new ExpressionFilterDefinition<TEntity>(x => x.Id == entity.Id);
+                    var replaceModel = new ReplaceOneModel<TEntity>(filter, entity);
+                    writeModels.Add(replaceModel);
+                }
+                return this.Collection.BulkWriteAsync(writeModels);
+            }
+            return Task.CompletedTask;
+        }
+
+        [Obsolete("Replaced with Upsert")]
         public Task Insert(TEntity e)
         {
             return this.Collection.InsertOneAsync(e);
         }
 
+        [Obsolete("Replaced with Upsert")]
         public Task Insert(IReadOnlyCollection<TEntity> entities)
         {
             return this.Collection.InsertManyAsync(entities);
         }
 
+        [Obsolete("Replaced with Upsert")]
         public Task Update(TEntity entity)
         {
             return this.Collection.ReplaceOneAsync(p => p.Id == entity.Id, entity);
         }
 
+        [Obsolete("Replaced with Upsert")]
         public async Task Update(IReadOnlyCollection<TEntity> entities)
         {
             var writeModels = new List<WriteModel<TEntity>>();

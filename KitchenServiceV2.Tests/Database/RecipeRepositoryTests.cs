@@ -27,7 +27,7 @@ namespace KitchenServiceV2.Tests.Database
                 UserToken = "Token123",
                 Name = "test item"
             };
-            await this._sut.Insert(recipe);
+            await this._sut.Upsert(recipe);
             Assert.NotNull(recipe.Id);
 
             var dbRecipe = await this._sut.Find("Token123", "Test Item");
@@ -63,7 +63,7 @@ namespace KitchenServiceV2.Tests.Database
                     }
                 }
             };
-            await this._sut.Insert(recipe);
+            await this._sut.Upsert(recipe);
             Assert.NotNull(recipe.Id);
 
             var dbRecipe = await this._sut.Find("recipeKey");

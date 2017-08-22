@@ -27,12 +27,12 @@ namespace KitchenServiceV2.Tests.Database
                 Name = "test category",
                 UserToken = "UserToken"
             };
-            await this._sut.Insert(category);
+            await this._sut.Upsert(category);
             Assert.NotNull(category.Id);
             this.Output.WriteLine(category.Id.ToString());
 
             category.Name = "updated";
-            await this._sut.Update(category);
+            await this._sut.Upsert(category);
 
             var dbCategory = await this._sut.Find("UserToken", "Updated");
             Assert.NotNull(dbCategory);
@@ -51,7 +51,7 @@ namespace KitchenServiceV2.Tests.Database
                 UserToken = "UserToken"
             };
             category.ItemIds.Add(new ObjectId());
-            await this._sut.Insert(category);
+            await this._sut.Upsert(category);
             Assert.NotNull(category.Id);
             this.Output.WriteLine(category.Id.ToString());
 
@@ -75,7 +75,7 @@ namespace KitchenServiceV2.Tests.Database
                     Name = "category " + i,
                     UserToken = "UserToken"
                 };
-                await this._sut.Insert(category);
+                await this._sut.Upsert(category);
             }
 
             var dbCategories = (await this._sut.GetAll("UserToken")).ToList();
