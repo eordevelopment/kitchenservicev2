@@ -74,6 +74,11 @@ namespace KitchenServiceV2.Controllers
         {
             ValidateCategory(value);
 
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentException("Please provide an id");
+            }
+
             var categoryId = new ObjectId(id);
             var existingCategory = await this._categoryRepository.Get(categoryId);
             if (existingCategory == null)

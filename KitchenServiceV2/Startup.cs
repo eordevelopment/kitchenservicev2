@@ -77,6 +77,7 @@ namespace KitchenServiceV2
 
                 cfg.CreateMap<Item, ItemDto>();
                 cfg.CreateMap<ItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
+                cfg.CreateMap<RecipeItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
 
                 cfg.CreateMap<RecipeType, RecipeTypeDto>();
                 cfg.CreateMap<RecipeTypeDto, RecipeType>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());

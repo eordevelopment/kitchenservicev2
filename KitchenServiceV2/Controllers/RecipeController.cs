@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
+using KitchenServiceV2.Db.Mongo.Schema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -78,6 +79,116 @@ namespace KitchenServiceV2.Controllers
             }
 
             return dto;
+        }
+
+        [HttpPost]
+        public async Task Post([FromBody] RecipeDto value)
+        {
+            this.ValidateRecipe(value);
+
+            var existingRecipe = await this._recipeRepository.Find(LoggedInUserToken, value.Name);
+            if (existingRecipe != null)
+            {
+                throw new InvalidOperationException("Recipe already exists.");
+            }
+
+            var recipe = Mapper.Map<Recipe>(value);
+            recipe.UserToken = LoggedInUserToken;
+            recipe.Key = GuidEncoder.Encode(Guid.NewGuid());
+            recipe.RecipeTypeId = new ObjectId(value.RecipeType.Id);
+
+            if (recipe.RecipeItems != null && recipe.RecipeItems.Any())
+            {
+                await this.PopulateRecipeItems(value, recipe);
+            }
+
+            await this._recipeRepository.Upsert(recipe);
+        }
+
+        [HttpPut("{id}")]
+        public async Task Put(string id, [FromBody] RecipeDto value)
+        {
+            this.ValidateRecipe(value);
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentException("Please provide an id");
+            }
+
+            var recipeId = new ObjectId(id);
+            var existingRecipe = await this._recipeRepository.Get(recipeId);
+            if (existingRecipe == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+
+            var recipe = Mapper.Map<Recipe>(value);
+            recipe.UserToken = LoggedInUserToken;
+            recipe.Id = recipeId;
+            recipe.RecipeTypeId = new ObjectId(value.RecipeType.Id);
+
+            if (recipe.RecipeItems != null && recipe.RecipeItems.Any())
+            {
+                await this.PopulateRecipeItems(value, recipe);
+            }
+
+            await this._recipeRepository.Upsert(recipe);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task Delete(string id)
+        {
+            var recipeId = new ObjectId(id);
+            var recipe = await this._recipeRepository.Get(recipeId);
+            if (recipe == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+            await this._recipeRepository.Remove(recipeId);
+        }
+
+        [NonAction]
+        private void ValidateRecipe(RecipeDto value)
+        {
+            if (string.IsNullOrWhiteSpace(value.Name))
+            {
+                throw new InvalidOperationException("Name cannot be empty");
+            }
+            if (value.RecipeItems != null && value.RecipeItems.Any(x => string.IsNullOrEmpty(x.Name)))
+            {
+                throw new InvalidOperationException("Item name cannot be empty");
+            }
+            if (value.RecipeSteps != null && value.RecipeSteps.Any(x => string.IsNullOrWhiteSpace(x.Description)))
+            {
+                throw new InvalidOperationException("Description cannot be empty");
+            }
+        }
+
+        [NonAction]
+        private async Task PopulateRecipeItems(RecipeDto value, Recipe recipe)
+        {
+            recipe.RecipeItems = recipe.RecipeItems.Where(x => x.ItemId != ObjectId.Empty).ToList();
+
+            var newRecipeItems = value.RecipeItems.Where(x => string.IsNullOrEmpty(x.ItemId)).ToList();
+            var newItems = newRecipeItems
+                .GroupBy(x => x.Name)
+                .Select(x => x.First())
+                .Select(x =>
+                {
+                    var itm = Mapper.Map<Item>(x);
+                    itm.UserToken = LoggedInUserToken;
+                    return itm;
+                })
+                .ToList();
+            await this._itemRepository.Upsert(newItems);
+            var itemsByName = newItems.ToDictionary(x => x.Name);
+
+            foreach (var dto in newRecipeItems)
+            {
+                var recipeItem = Mapper.Map<RecipeItem>(dto);
+                recipeItem.ItemId = itemsByName[dto.Name.ToLower()].Id;
+                recipe.RecipeItems.Add(recipeItem);
+            }
         }
     }
 }

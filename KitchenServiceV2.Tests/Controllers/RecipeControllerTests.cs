@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Castle.Components.DictionaryAdapter;
+using KitchenServiceV2.Contract;
 using KitchenServiceV2.Controllers;
 using KitchenServiceV2.Db.Mongo.Schema;
 using MongoDB.Bson;
@@ -208,6 +210,221 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.Equal(20, result.RecipeItems[1].Amount);
             Assert.Equal("chopped", result.RecipeItems[1].Instructions);
             Assert.Equal("599a98f185142b3ce0f9659b", result.RecipeItems[1].ItemId);
+        }
+
+        [Fact]
+        public async Task DeleteNotFound()
+        {
+            this.RecipeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync((Recipe)null);
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Delete("599a98f185142b3ce0f9659c"));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(ArgumentException), exception);
+                Assert.Equal("No resource with id: 599a98f185142b3ce0f9659c", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task DeleteShouldDelete()
+        {
+            this.RecipeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new Recipe());
+            this.RecipeRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.CompletedTask);
+
+            await this._sut.Delete("599a98f185142b3ce0f9659c");
+
+            this.RecipeRepositoryMock.Verify(x => x.Remove(It.Is<ObjectId>(y => y.ToString() == "599a98f185142b3ce0f9659c")), Times.Once);
+        }
+
+        [Fact]
+        public async Task PostNoNameShouldThrow()
+        {
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Post(new RecipeDto()));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.Equal("Name cannot be empty", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task PutNoNameShouldThrow()
+        {
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Put("599a98f185142b3ce0f965a0", new RecipeDto()));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.Equal("Name cannot be empty", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task PostNoItemNameShouldThrow()
+        {
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Post(new RecipeDto
+            {
+                Name = "Test",
+                RecipeItems = new List<RecipeItemDto>
+                {
+                    new RecipeItemDto()
+                }
+            }));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.Equal("Item name cannot be empty", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task PutNoItemNameShouldThrow()
+        {
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Put("599a98f185142b3ce0f965a0", new RecipeDto
+            {
+                Name = "Test",
+                RecipeItems = new List<RecipeItemDto>
+                {
+                    new RecipeItemDto()
+                }
+            }));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.Equal("Item name cannot be empty", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task PostNoStepDescShouldThrow()
+        {
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Post(new RecipeDto
+            {
+                Name = "Test",
+                RecipeSteps = new List<RecipeStepDto>
+                {
+                    new RecipeStepDto()
+                }
+            }));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.Equal("Description cannot be empty", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task PutNoStepDescShouldThrow()
+        {
+            var exceptionAsync = Record.ExceptionAsync(() => this._sut.Put("599a98f185142b3ce0f965a0", new RecipeDto
+            {
+                Name = "Test",
+                RecipeSteps = new List<RecipeStepDto>
+                {
+                    new RecipeStepDto()
+                }
+            }));
+            if (exceptionAsync != null)
+            {
+                var exception = await exceptionAsync;
+                Assert.IsType(typeof(InvalidOperationException), exception);
+                Assert.Equal("Description cannot be empty", exception.Message);
+            }
+        }
+
+        [Fact]
+        public async Task PostShouldSave()
+        {
+            var recipe = new RecipeDto
+            {
+                Name = "Test Recipe",
+                RecipeType = new RecipeTypeDto
+                {
+                    Id = "599a98f185142b3ce0f965a0"
+                },
+                RecipeSteps = new List<RecipeStepDto>
+                {
+                    new RecipeStepDto
+                    {
+                        Description = "Step 1",
+                        StepNumber = 1
+                    },
+                    new RecipeStepDto
+                    {
+                        Description = "Step 2",
+                        StepNumber = 2
+                    }
+                },
+                RecipeItems = new List<RecipeItemDto>
+                {
+                    new RecipeItemDto
+                    {
+                        Name = "Existing Item 1",
+                        ItemId = "599a98f185142b3ce0f96599",
+                        Quantity = 10,
+                        Amount = 1,
+                        UnitType = "ml",
+                        Instructions = "diced"
+                    },
+                    new RecipeItemDto
+                    {
+                        Name = "Existing Item 2",
+                        ItemId = "599a98f185142b3ce0f9659b",
+                        Quantity = 20,
+                        Amount = 2,
+                        UnitType = "ml",
+                        Instructions = "diced"
+                    },
+                    new RecipeItemDto
+                    {
+                        Name = "New Item 1",
+                        Quantity = 30,
+                        Amount = 3,
+                        UnitType = "kg",
+                        Instructions = "chopped"
+                    },
+                    new RecipeItemDto
+                    {
+                        Name = "New Item 2",
+                        Quantity = 40,
+                        Amount = 4,
+                        UnitType = "kg",
+                        Instructions = "chopped"
+                    }
+                }
+            };
+
+            this.RecipeRepositoryMock.Setup(x => x.Find(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((Recipe) null);
+            this.ItemRepositoryMock.Setup(x => x.Upsert(It.IsAny<IReadOnlyCollection<Item>>())).Returns(Task.CompletedTask);
+            this.RecipeRepositoryMock.Setup(x => x.Upsert(It.IsAny<Recipe>())).Returns(Task.CompletedTask);
+
+            await this._sut.Post(recipe);
+
+            this.ItemRepositoryMock
+                .Verify(x => x.Upsert(It.Is<IReadOnlyCollection<Item>>(items =>
+                    items.Count == 2 &&
+                    items.Any(itm => itm.Name == "new item 1" && itm.Quantity == 30 && itm.UnitType == "kg" && itm.UserToken == "UserToken") &&
+                    items.Any(itm => itm.Name == "new item 2" && itm.Quantity == 40 && itm.UnitType == "kg" && itm.UserToken == "UserToken")
+                )), Times.Once);
+
+            this.RecipeRepositoryMock
+                .Verify(x => x.Upsert(It.Is<Recipe>(r =>
+                    r.Name == "test recipe" &&
+                    r.Key != null &&
+                    r.UserToken == "UserToken" &&
+                    r.RecipeSteps.Count == 2 &&
+                    r.RecipeSteps.Any(s => s.Description == "Step 1" && s.StepNumber == 1) &&
+                    r.RecipeSteps.Any(s => s.Description == "Step 2" && s.StepNumber == 2) &&
+                    r.RecipeItems.Count == 4 &&
+                    r.RecipeItems.Any(i => i.ItemId.ToString() == "599a98f185142b3ce0f96599" && i.Amount == 1 && i.Instructions == "diced") &&
+                    r.RecipeItems.Any(i => i.ItemId.ToString() == "599a98f185142b3ce0f9659b" && i.Amount == 2 && i.Instructions == "diced") &&
+                    r.RecipeItems.Any(i => i.Amount == 3 && i.Instructions == "chopped") &&
+                    r.RecipeItems.Any(i => i.Amount == 4 && i.Instructions == "chopped")
+                )), Times.Once);
         }
     }
 }
