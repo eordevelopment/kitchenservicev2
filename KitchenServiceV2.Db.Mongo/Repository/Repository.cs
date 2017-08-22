@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo.Schema;
@@ -41,63 +40,25 @@ namespace KitchenServiceV2.Db.Mongo.Repository
         {
             if (e.Id == ObjectId.Empty)
             {
-                return this.Collection.InsertOneAsync(e);
+                return this.Insert(e);
             }
-            return this.Collection.ReplaceOneAsync(p => p.Id == e.Id, e);
+            return this.Update(e);
         }
 
         public Task Upsert(IReadOnlyCollection<TEntity> entities)
         {
-            var newItems = entities.Where(x => x.Id == ObjectId.Empty);
-            var existingItems = entities.Where(x => x.Id != ObjectId.Empty);
+            var newItems = entities.Where(x => x.Id == ObjectId.Empty).ToList();
+            var existingItems = entities.Where(x => x.Id != ObjectId.Empty).ToList();
 
             if (newItems.Any())
             {
-                return this.Collection.InsertManyAsync(entities);
+                return this.Insert(newItems);
             }
             if (existingItems.Any())
             {
-                var writeModels = new List<WriteModel<TEntity>>();
-                foreach (var entity in entities)
-                {
-                    var filter = new ExpressionFilterDefinition<TEntity>(x => x.Id == entity.Id);
-                    var replaceModel = new ReplaceOneModel<TEntity>(filter, entity);
-                    writeModels.Add(replaceModel);
-                }
-                return this.Collection.BulkWriteAsync(writeModels);
+                return this.Update(existingItems);
             }
             return Task.CompletedTask;
-        }
-
-        [Obsolete("Replaced with Upsert")]
-        public Task Insert(TEntity e)
-        {
-            return this.Collection.InsertOneAsync(e);
-        }
-
-        [Obsolete("Replaced with Upsert")]
-        public Task Insert(IReadOnlyCollection<TEntity> entities)
-        {
-            return this.Collection.InsertManyAsync(entities);
-        }
-
-        [Obsolete("Replaced with Upsert")]
-        public Task Update(TEntity entity)
-        {
-            return this.Collection.ReplaceOneAsync(p => p.Id == entity.Id, entity);
-        }
-
-        [Obsolete("Replaced with Upsert")]
-        public async Task Update(IReadOnlyCollection<TEntity> entities)
-        {
-            var writeModels = new List<WriteModel<TEntity>>();
-            foreach (var entity in entities)
-            {
-                var filter = new ExpressionFilterDefinition<TEntity>(x => x.Id == entity.Id);
-                var replaceModel = new ReplaceOneModel<TEntity>(filter, entity);
-                writeModels.Add(replaceModel);
-            }
-            await this.Collection.BulkWriteAsync(writeModels);
         }
 
         public Task Remove(TEntity entity)
@@ -108,6 +69,33 @@ namespace KitchenServiceV2.Db.Mongo.Repository
         public Task Remove(ObjectId id)
         {
             return this.Collection.DeleteOneAsync(p => p.Id == id);
+        }
+
+        private Task Insert(TEntity e)
+        {
+            return this.Collection.InsertOneAsync(e);
+        }
+
+        private Task Insert(IReadOnlyCollection<TEntity> entities)
+        {
+            return this.Collection.InsertManyAsync(entities);
+        }
+
+        private Task Update(TEntity entity)
+        {
+            return this.Collection.ReplaceOneAsync(p => p.Id == entity.Id, entity);
+        }
+
+        private async Task Update(IEnumerable<TEntity> entities)
+        {
+            var writeModels = new List<WriteModel<TEntity>>();
+            foreach (var entity in entities)
+            {
+                var filter = new ExpressionFilterDefinition<TEntity>(x => x.Id == entity.Id);
+                var replaceModel = new ReplaceOneModel<TEntity>(filter, entity);
+                writeModels.Add(replaceModel);
+            }
+            await this.Collection.BulkWriteAsync(writeModels);
         }
     }
 }

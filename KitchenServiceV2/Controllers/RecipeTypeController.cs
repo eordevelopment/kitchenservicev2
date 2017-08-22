@@ -45,7 +45,7 @@ namespace KitchenServiceV2.Controllers
             }
 
             var recipeType = Mapper.Map<RecipeType>(value);
-            await this._recipeTypeRepository.Insert(recipeType);
+            await this._recipeTypeRepository.Upsert(recipeType);
 
             return recipeType.Id.ToString();
         }
@@ -69,7 +69,7 @@ namespace KitchenServiceV2.Controllers
             recipeType.Id = recipeTypeId;
             recipeType.UserToken = LoggedInUserToken;
 
-            await this._recipeTypeRepository.Update(recipeType);
+            await this._recipeTypeRepository.Upsert(recipeType);
 
             return recipeType.Id.ToString();
         }

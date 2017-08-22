@@ -171,7 +171,7 @@ namespace KitchenServiceV2.Tests.Controllers
         public async Task DeleteShouldDelete()
         {
             this.CategoriyRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new Category());
-            this.CategoriyRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.FromResult(true));
+            this.CategoriyRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.CompletedTask);
 
             await this._sut.Delete("599a98f185142b3ce0f9659c");
 
@@ -282,10 +282,8 @@ namespace KitchenServiceV2.Tests.Controllers
             this.CategoriyRepositoryMock.Setup(x => x.Find(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync((Category)null);
 
-            this.CategoriyRepositoryMock.Setup(x => x.Insert(It.IsAny<Category>())).Returns(Task.FromResult(true));
-            this.ItemRepositoryMock.Setup(x => x.Insert(It.IsAny<IReadOnlyCollection<Item>>())).Returns(Task.FromResult(true));
-            this.ItemRepositoryMock.Setup(x => x.Update(It.IsAny<IReadOnlyCollection<Item>>()))
-                .Returns(Task.FromResult(true));
+            this.CategoriyRepositoryMock.Setup(x => x.Upsert(It.IsAny<Category>())).Returns(Task.CompletedTask);
+            this.ItemRepositoryMock.Setup(x => x.Upsert(It.IsAny<IReadOnlyCollection<Item>>())).Returns(Task.CompletedTask);
 
             var category = new CategoryDto
             {
@@ -324,7 +322,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
             await this._sut.Post(category);
             this.CategoriyRepositoryMock
-                .Verify(x => x.Insert(It.Is<Category>(cat =>
+                .Verify(x => x.Upsert(It.Is<Category>(cat =>
                     cat.Name == "test category" &&
                     cat.UserToken == "UserToken" &&
                     cat.ItemIds.Count == 4 &&
@@ -333,16 +331,12 @@ namespace KitchenServiceV2.Tests.Controllers
                 )), Times.Once);
 
             this.ItemRepositoryMock
-                .Verify(x => x.Insert(It.Is<IReadOnlyCollection<Item>>(y =>
-                    y.Count == 2 &&
-                    y.First(itm => itm.Name == "new item 1" && itm.UserToken == "UserToken" && itm.Quantity == 1 && itm.UnitType == "1") != null &&
-                    y.First(itm => itm.Name == "new item 2" && itm.UserToken == "UserToken" && itm.Quantity == 2 && itm.UnitType == "2") != null
-                )), Times.Once);
-
-            this.ItemRepositoryMock
-                .Verify(x => x.Update(It.Is<IReadOnlyCollection<Item>>(itms =>
-                    itms.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659c" && itm.Name == "existing item 1") &&
-                    itms.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659d" && itm.Name == "existing item 2")
+                .Verify(x => x.Upsert(It.Is<IReadOnlyCollection<Item>>(y =>
+                    y.Count == 4 &&
+                    y.Any(itm => itm.Name == "new item 1" && itm.UserToken == "UserToken" && itm.Quantity == 1 && itm.UnitType == "1") &&
+                    y.Any(itm => itm.Name == "new item 2" && itm.UserToken == "UserToken" && itm.Quantity == 2 && itm.UnitType == "2") &&
+                    y.Any(itm => itm.Name == "existing item 1" && itm.Id.ToString() == "599a98f185142b3ce0f9659c") &&
+                    y.Any(itm => itm.Name == "existing item 2" && itm.Id.ToString() == "599a98f185142b3ce0f9659d")
                 )), Times.Once);
         }
 
@@ -352,7 +346,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this.CategoriyRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
                 .ReturnsAsync(new Category());
 
-            this.CategoriyRepositoryMock.Setup(x => x.Update(It.IsAny<Category>())).Returns(Task.FromResult(true));
+            this.CategoriyRepositoryMock.Setup(x => x.Upsert(It.IsAny<Category>())).Returns(Task.CompletedTask);
 
             await this._sut.Put("599a98f185142b3ce0f96598", new CategoryDto
             {
@@ -362,7 +356,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
 
             this.CategoriyRepositoryMock
-                .Verify(x => x.Update(It.Is<Category>(rt =>
+                .Verify(x => x.Upsert(It.Is<Category>(rt =>
                     rt.Name == "test type" &&
                     rt.Id.ToString() == "599a98f185142b3ce0f96598" &&
                     rt.UserToken == "UserToken"

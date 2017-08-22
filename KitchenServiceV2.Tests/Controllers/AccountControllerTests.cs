@@ -55,7 +55,7 @@ namespace KitchenServiceV2.Tests.Controllers
         public async Task RegisterShouldSave()
         {
             this.AccountRepositoryMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync((Account)null);
-            this.AccountRepositoryMock.Setup(x => x.Insert(It.IsAny<Account>())).Returns(Task.FromResult(true));
+            this.AccountRepositoryMock.Setup(x => x.Upsert(It.IsAny<Account>())).Returns(Task.CompletedTask);
 
             var postData = new AccountDto
             {
@@ -69,7 +69,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
             // verify that UserName is converted to lower case
             this.AccountRepositoryMock
-                .Verify(x => x.Insert(It.Is<Account>(y => y.HashedPassword == "password" && y.UserName == "username")), Times.Once);
+                .Verify(x => x.Upsert(It.Is<Account>(y => y.HashedPassword == "password" && y.UserName == "username")), Times.Once);
         }
 
         [Fact]

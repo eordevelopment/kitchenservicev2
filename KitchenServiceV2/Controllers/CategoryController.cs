@@ -66,7 +66,7 @@ namespace KitchenServiceV2.Controllers
             var category = await this.PopulateCategory(value);
 
             // save the category
-            await this._categoryRepository.Insert(category);
+            await this._categoryRepository.Upsert(category);
         }
 
         [HttpPut("{id}")]
@@ -85,7 +85,7 @@ namespace KitchenServiceV2.Controllers
             category.Id = categoryId;
 
             // save the category
-            await this._categoryRepository.Update(category);
+            await this._categoryRepository.Upsert(category);
         }
 
         [HttpDelete("{id}")]
@@ -115,16 +115,8 @@ namespace KitchenServiceV2.Controllers
                 return itm;
             }).ToList();
 
-            var newItems = items.Where(x => x.Id == ObjectId.Empty).ToList();
-            var existingItems = items.Where(x => x.Id != ObjectId.Empty).ToList();
-
-            // bulk insert the new items
-            await this._itemRepository.Insert(newItems);
-            category.ItemIds.AddRange(newItems.Select(x => x.Id));
-
-            // bulk update the existing items.
-            await this._itemRepository.Update(existingItems);
-            category.ItemIds.AddRange(existingItems.Select(x => x.Id));
+            await this._itemRepository.Upsert(items);
+            category.ItemIds.AddRange(items.Select(x => x.Id));
 
             return category;
         }

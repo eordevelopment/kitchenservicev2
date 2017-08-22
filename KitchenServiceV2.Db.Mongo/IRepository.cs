@@ -15,19 +15,6 @@ namespace KitchenServiceV2.Db.Mongo
         Task<List<TEntity>> Get(IReadOnlyCollection<ObjectId> ids);
         Task Upsert(TEntity e);
         Task Upsert(IReadOnlyCollection<TEntity> entities);
-
-        [Obsolete("Replaced with Upsert")]
-        Task Insert(TEntity e);
-
-        [Obsolete("Replaced with Upsert")]
-        Task Insert(IReadOnlyCollection<TEntity> entities);
-
-        [Obsolete("Replaced with Upsert")]
-        Task Update(TEntity entity);
-
-        [Obsolete("Replaced with Upsert")]
-        Task Update(IReadOnlyCollection<TEntity> entities);
-
         Task Remove(TEntity entity);
         Task Remove(ObjectId id);
     }

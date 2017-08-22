@@ -71,7 +71,7 @@ namespace KitchenServiceV2.Tests.Controllers
         public async Task DeleteShouldDelete()
         {
             this.RecipeTypeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new RecipeType());
-            this.RecipeTypeRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.FromResult(true));
+            this.RecipeTypeRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.CompletedTask);
 
             await this._sut.Delete("599a98f185142b3ce0f9659c");
 
@@ -144,7 +144,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this.RecipeTypeRepositoryMock.Setup(x => x.Find(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync((RecipeType)null);
 
-            this.RecipeTypeRepositoryMock.Setup(x => x.Insert(It.IsAny<RecipeType>())).Returns(Task.FromResult(true));
+            this.RecipeTypeRepositoryMock.Setup(x => x.Upsert(It.IsAny<RecipeType>())).Returns(Task.CompletedTask);
 
             var result = await this._sut.Post(new RecipeTypeDto
             {
@@ -153,7 +153,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
             Assert.NotNull(result);
 
-            this.RecipeTypeRepositoryMock.Verify(x => x.Insert(It.Is<RecipeType>(rt => rt.Name == "test type")), Times.Once);
+            this.RecipeTypeRepositoryMock.Verify(x => x.Upsert(It.Is<RecipeType>(rt => rt.Name == "test type")), Times.Once);
         }
 
         [Fact]
@@ -162,7 +162,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this.RecipeTypeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
                 .ReturnsAsync(new RecipeType());
 
-            this.RecipeTypeRepositoryMock.Setup(x => x.Update(It.IsAny<RecipeType>())).Returns(Task.FromResult(true));
+            this.RecipeTypeRepositoryMock.Setup(x => x.Upsert(It.IsAny<RecipeType>())).Returns(Task.CompletedTask);
 
             var result = await this._sut.Put("599a98f185142b3ce0f96598", new RecipeTypeDto
             {
@@ -174,7 +174,7 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.NotEqual(ObjectId.Empty.ToString(), result);
 
             this.RecipeTypeRepositoryMock
-                .Verify(x => x.Update(It.Is<RecipeType>(rt =>
+                .Verify(x => x.Upsert(It.Is<RecipeType>(rt =>
                     rt.Name == "test type" &&
                     rt.Id.ToString() == "599a98f185142b3ce0f96598" &&
                     rt.UserToken == "UserToken"

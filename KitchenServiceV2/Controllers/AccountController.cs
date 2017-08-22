@@ -37,7 +37,7 @@ namespace KitchenServiceV2.Controllers
                 UserName = value.UserName.ToLower(),
                 UserToken = Guid.NewGuid().ToString()
             };
-            await this._repository.Insert(account);
+            await this._repository.Upsert(account);
 
             return account.UserToken;
         }
