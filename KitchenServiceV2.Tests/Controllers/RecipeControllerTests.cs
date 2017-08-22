@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Castle.Components.DictionaryAdapter;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Controllers;
 using KitchenServiceV2.Db.Mongo.Schema;
