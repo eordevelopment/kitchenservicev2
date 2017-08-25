@@ -160,7 +160,7 @@ namespace KitchenServiceV2.Tests.Database
 
             var dbItems = await this._sut.GetAll("Token123");
             Assert.Equal(2, dbItems.Count);
-            Assert.NotNull(dbItems.FirstOrDefault(x => x.Name == "test item - updated"));
+            Assert.NotNull(dbItems.FirstOrDefault(x => x.Name == "test item - updated" && x.Id == item.Id));
             Assert.NotNull(dbItems.FirstOrDefault(x => x.Name == "test item 2"));
         }
     }

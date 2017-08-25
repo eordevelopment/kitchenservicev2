@@ -17,7 +17,7 @@ namespace KitchenServiceV2.Contract
         public bool IsDone { get; set; }
 
         [DataMember]
-        public DateTimeOffset CreatedOn { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         [DataMember]
         public List<ShoppingListItemDto> Items { get; set; }

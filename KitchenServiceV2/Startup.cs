@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
@@ -33,12 +34,13 @@ namespace KitchenServiceV2
         {
             services.Configure<AuthorizationOptions>(options =>
             {
-                options.AddPolicy("HasToken", policy => policy.Requirements.Add(new UserTokenPolicy()));
+                options.AddPolicy("HasToken", policy => policy.Requirements.Add(new UserTokenPolicyRequirement()));
             });
 
             var conn = Configuration.GetSection("mongoDbConnection").Value;
             var db = Configuration.GetSection("mongoDb").Value;
 
+            services.AddScoped<IAuthorizationHandler, UserTokenPolicy>();
             services.AddScoped<IDbContext, DbContext>(ctx => new DbContext(conn, db));
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -90,6 +92,8 @@ namespace KitchenServiceV2
                 cfg.CreateMap<RecipeItem, RecipeItemDto>();
                 cfg.CreateMap<RecipeItemDto, RecipeItem>();
 
+                cfg.CreateMap<Plan, PlanDto>().AfterMap((src, dest) => dest.DateTime = new DateTime(src.DateTimeTicks, DateTimeKind.Utc));
+                cfg.CreateMap<PlanDto, Plan>().AfterMap((src, dest) => dest.DateTimeTicks = src.DateTime.Ticks);
 
                 cfg.CreateMap<string, ObjectId>().ConvertUsing(s =>
                 {
