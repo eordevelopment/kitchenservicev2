@@ -79,7 +79,6 @@ namespace KitchenServiceV2
 
                 cfg.CreateMap<Item, ItemDto>();
                 cfg.CreateMap<ItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
-                cfg.CreateMap<RecipeItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
 
                 cfg.CreateMap<RecipeType, RecipeTypeDto>();
                 cfg.CreateMap<RecipeTypeDto, RecipeType>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
@@ -89,7 +88,10 @@ namespace KitchenServiceV2
 
                 cfg.CreateMap<RecipeStep, RecipeStepDto>();
                 cfg.CreateMap<RecipeStepDto, RecipeStep>();
-                cfg.CreateMap<RecipeItem, RecipeItemDto>();
+                cfg.CreateMap<RecipeItem, RecipeItemDto>().AfterMap((src, dest) => dest.Item = new ItemDto
+                {
+                    Id = src.ItemId.ToString()
+                });
                 cfg.CreateMap<RecipeItemDto, RecipeItem>();
 
                 cfg.CreateMap<Plan, PlanDto>().AfterMap((src, dest) => dest.DateTime = new DateTime(src.DateTimeTicks, DateTimeKind.Utc));

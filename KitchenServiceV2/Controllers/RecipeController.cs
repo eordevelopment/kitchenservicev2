@@ -70,12 +70,12 @@ namespace KitchenServiceV2.Controllers
 
             foreach (var recipeItem in dto.RecipeItems)
             {
-                var item = itemsById.ContainsKey(recipeItem.ItemId) ? itemsById[recipeItem.ItemId] : null;
+                var item = itemsById.ContainsKey(recipeItem.Item.Id) ? itemsById[recipeItem.Item.Id] : null;
                 if(item == null) continue;
 
-                recipeItem.Name = item.Name;
-                recipeItem.Quantity = item.Quantity;
-                recipeItem.UnitType = item.UnitType;
+                recipeItem.Item.Name = item.Name;
+                recipeItem.Item.Quantity = item.Quantity;
+                recipeItem.Item.UnitType = item.UnitType;
             }
 
             return dto;
@@ -154,7 +154,7 @@ namespace KitchenServiceV2.Controllers
             {
                 throw new InvalidOperationException("Name cannot be empty");
             }
-            if (value.RecipeItems != null && value.RecipeItems.Any(x => string.IsNullOrEmpty(x.Name)))
+            if (value.RecipeItems != null && value.RecipeItems.Any(x => string.IsNullOrEmpty(x.Item.Name)))
             {
                 throw new InvalidOperationException("Item name cannot be empty");
             }
@@ -167,26 +167,24 @@ namespace KitchenServiceV2.Controllers
         [NonAction]
         private async Task PopulateRecipeItems(RecipeDto value, Recipe recipe)
         {
-            recipe.RecipeItems = recipe.RecipeItems.Where(x => x.ItemId != ObjectId.Empty).ToList();
-
-            var newRecipeItems = value.RecipeItems.Where(x => string.IsNullOrEmpty(x.ItemId)).ToList();
-            var newItems = newRecipeItems
-                .GroupBy(x => x.Name)
+            var items = value.RecipeItems.Where(x => x.Item != null)
+                .GroupBy(x => x.Item.Name)
                 .Select(x => x.First())
                 .Select(x =>
                 {
-                    var itm = Mapper.Map<Item>(x);
+                    var itm = Mapper.Map<Item>(x.Item);
                     itm.UserToken = LoggedInUserToken;
                     return itm;
                 })
                 .ToList();
-            await this._itemRepository.Upsert(newItems);
-            var itemsByName = newItems.ToDictionary(x => x.Name);
+            await this._itemRepository.Upsert(items);
+            var itemsByName = items.ToDictionary(x => x.Name);
 
-            foreach (var dto in newRecipeItems)
+            recipe.RecipeItems.Clear();
+            foreach (var dto in value.RecipeItems)
             {
                 var recipeItem = Mapper.Map<RecipeItem>(dto);
-                recipeItem.ItemId = itemsByName[dto.Name.ToLower()].Id;
+                recipeItem.ItemId = itemsByName[dto.Item.Name.ToLower()].Id;
                 recipe.RecipeItems.Add(recipeItem);
             }
         }

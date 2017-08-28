@@ -196,19 +196,19 @@ namespace KitchenServiceV2.Tests.Controllers
 
             Assert.Equal(2, result.RecipeItems.Count);
 
-            Assert.Equal("item 1", result.RecipeItems[0].Name);
-            Assert.Equal(1, result.RecipeItems[0].Quantity);
-            Assert.Equal("1", result.RecipeItems[0].UnitType);
+            Assert.Equal("item 1", result.RecipeItems[0].Item.Name);
+            Assert.Equal(1, result.RecipeItems[0].Item.Quantity);
+            Assert.Equal("1", result.RecipeItems[0].Item.UnitType);
             Assert.Equal(10, result.RecipeItems[0].Amount);
             Assert.Equal("diced", result.RecipeItems[0].Instructions);
-            Assert.Equal("599a98f185142b3ce0f96599", result.RecipeItems[0].ItemId);
+            Assert.Equal("599a98f185142b3ce0f96599", result.RecipeItems[0].Item.Id);
 
-            Assert.Equal("item 2", result.RecipeItems[1].Name);
-            Assert.Equal(2, result.RecipeItems[1].Quantity);
-            Assert.Equal("2", result.RecipeItems[1].UnitType);
+            Assert.Equal("item 2", result.RecipeItems[1].Item.Name);
+            Assert.Equal(2, result.RecipeItems[1].Item.Quantity);
+            Assert.Equal("2", result.RecipeItems[1].Item.UnitType);
             Assert.Equal(20, result.RecipeItems[1].Amount);
             Assert.Equal("chopped", result.RecipeItems[1].Instructions);
-            Assert.Equal("599a98f185142b3ce0f9659b", result.RecipeItems[1].ItemId);
+            Assert.Equal("599a98f185142b3ce0f9659b", result.RecipeItems[1].Item.Id);
         }
 
         [Fact]
@@ -267,7 +267,10 @@ namespace KitchenServiceV2.Tests.Controllers
                 Name = "Test",
                 RecipeItems = new List<RecipeItemDto>
                 {
-                    new RecipeItemDto()
+                    new RecipeItemDto
+                    {
+                        Item = new ItemDto()
+                    }
                 }
             }));
             if (exceptionAsync != null)
@@ -286,7 +289,10 @@ namespace KitchenServiceV2.Tests.Controllers
                 Name = "Test",
                 RecipeItems = new List<RecipeItemDto>
                 {
-                    new RecipeItemDto()
+                    new RecipeItemDto
+                    {
+                        Item = new ItemDto()
+                    }
                 }
             }));
             if (exceptionAsync != null)
@@ -362,37 +368,49 @@ namespace KitchenServiceV2.Tests.Controllers
                 {
                     new RecipeItemDto
                     {
-                        Name = "Existing Item 1",
-                        ItemId = "599a98f185142b3ce0f96599",
-                        Quantity = 10,
                         Amount = 1,
-                        UnitType = "ml",
-                        Instructions = "diced"
+                        Instructions = "diced",
+                        Item = new ItemDto
+                        {
+                            Name = "Existing Item 1",
+                            Id = "599a98f185142b3ce0f9659b",
+                            Quantity = 10,
+                            UnitType = "ml"
+                        }
                     },
                     new RecipeItemDto
                     {
-                        Name = "Existing Item 2",
-                        ItemId = "599a98f185142b3ce0f9659b",
-                        Quantity = 20,
                         Amount = 2,
-                        UnitType = "ml",
-                        Instructions = "diced"
+                        Instructions = "diced",
+                        Item = new ItemDto
+                        {
+                            Name = "Existing Item 2",
+                            Id = "599a98f185142b3ce0f96599",
+                            Quantity = 20,
+                            UnitType = "ml"
+                        }
                     },
                     new RecipeItemDto
                     {
-                        Name = "New Item 1",
-                        Quantity = 30,
                         Amount = 3,
-                        UnitType = "kg",
-                        Instructions = "chopped"
+                        Instructions = "chopped",
+                        Item = new ItemDto
+                        {
+                            Name = "New Item 1",
+                            Quantity = 30,
+                            UnitType = "kg"
+                        }
                     },
                     new RecipeItemDto
                     {
-                        Name = "New Item 2",
-                        Quantity = 40,
                         Amount = 4,
-                        UnitType = "kg",
-                        Instructions = "chopped"
+                        Instructions = "chopped",
+                        Item = new ItemDto
+                        {
+                            Name = "New Item 2",
+                            Quantity = 40,
+                            UnitType = "kg"
+                        }
                     }
                 }
             };
@@ -405,9 +423,11 @@ namespace KitchenServiceV2.Tests.Controllers
 
             this.ItemRepositoryMock
                 .Verify(x => x.Upsert(It.Is<IReadOnlyCollection<Item>>(items =>
-                    items.Count == 2 &&
+                    items.Count == 4 &&
                     items.Any(itm => itm.Name == "new item 1" && itm.Quantity == 30 && itm.UnitType == "kg" && itm.UserToken == "UserToken") &&
-                    items.Any(itm => itm.Name == "new item 2" && itm.Quantity == 40 && itm.UnitType == "kg" && itm.UserToken == "UserToken")
+                    items.Any(itm => itm.Name == "new item 2" && itm.Quantity == 40 && itm.UnitType == "kg" && itm.UserToken == "UserToken") &&
+                    items.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659b" && itm.Name == "existing item 1" && itm.Quantity == 10 && itm.UnitType == "ml" && itm.UserToken == "UserToken") &&
+                    items.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f96599" && itm.Name == "existing item 2" && itm.Quantity == 20 && itm.UnitType == "ml" && itm.UserToken == "UserToken")
                 )), Times.Once);
 
             this.RecipeRepositoryMock
@@ -419,8 +439,8 @@ namespace KitchenServiceV2.Tests.Controllers
                     r.RecipeSteps.Any(s => s.Description == "Step 1" && s.StepNumber == 1) &&
                     r.RecipeSteps.Any(s => s.Description == "Step 2" && s.StepNumber == 2) &&
                     r.RecipeItems.Count == 4 &&
-                    r.RecipeItems.Any(i => i.ItemId.ToString() == "599a98f185142b3ce0f96599" && i.Amount == 1 && i.Instructions == "diced") &&
-                    r.RecipeItems.Any(i => i.ItemId.ToString() == "599a98f185142b3ce0f9659b" && i.Amount == 2 && i.Instructions == "diced") &&
+                    r.RecipeItems.Any(i => i.ItemId.ToString() == "599a98f185142b3ce0f9659b" && i.Amount == 1 && i.Instructions == "diced") &&
+                    r.RecipeItems.Any(i => i.ItemId.ToString() == "599a98f185142b3ce0f96599" && i.Amount == 2 && i.Instructions == "diced") &&
                     r.RecipeItems.Any(i => i.Amount == 3 && i.Instructions == "chopped") &&
                     r.RecipeItems.Any(i => i.Amount == 4 && i.Instructions == "chopped")
                 )), Times.Once);

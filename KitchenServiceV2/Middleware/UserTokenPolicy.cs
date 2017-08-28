@@ -19,12 +19,14 @@ namespace KitchenServiceV2.Middleware
             if (mvcContext == null)
             {
                 context.Fail();
+                return;
             }
 
             var headers = mvcContext?.Request?.Headers;
             if (headers == null)
             {
                 context.Fail();
+                return;
             }
             else
             {
@@ -35,11 +37,13 @@ namespace KitchenServiceV2.Middleware
                 if (tokenVal == null)
                 {
                     context.Fail();
+                    return;
                 }
 
                 if (await this.IsValidToken(tokenVal))
                 {
                     context.Succeed(requirement);
+                    return;
                 }
 
                 context.Fail();
