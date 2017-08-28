@@ -45,6 +45,7 @@ namespace KitchenServiceV2.Controllers
             }
 
             var recipeType = Mapper.Map<RecipeType>(value);
+            recipeType.UserToken = LoggedInUserToken;
             await this._recipeTypeRepository.Upsert(recipeType);
 
             return recipeType.Id.ToString();
