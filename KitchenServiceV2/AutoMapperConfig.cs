@@ -48,6 +48,24 @@ namespace KitchenServiceV2
                 cfg.CreateMap<PlanItem, PlanItemDto>();
                 cfg.CreateMap<PlanItemDto, PlanItem>();
 
+                cfg.CreateMap<ShoppingList, ShoppingListDto>().AfterMap((src, dest) =>
+                {
+                    dest.CreatedOn = DateTimeOffset.FromUnixTimeSeconds(src.CreatedOnUnixSeconds);
+                });
+                cfg.CreateMap<ShoppingListDto, ShoppingList>().AfterMap((src, dest) =>
+                {
+                    dest.CreatedOnUnixSeconds = src.CreatedOn.ToUnixTimeSeconds();
+                });
+
+                cfg.CreateMap<ShoppingListItem, ShoppingListItemDto>().AfterMap((src, dest) =>
+                {
+                    dest.Item = new ItemDto{Id = src.ItemId.ToString()};
+                });
+                cfg.CreateMap<ShoppingListItemDto, ShoppingListItem>().AfterMap((src, dest) =>
+                {
+                    dest.ItemId = Mapper.Map<ObjectId>(src.Item?.Id);
+                });
+
                 cfg.CreateMap<string, ObjectId>().ConvertUsing(s =>
                 {
                     if (string.IsNullOrWhiteSpace(s)) return ObjectId.Empty;

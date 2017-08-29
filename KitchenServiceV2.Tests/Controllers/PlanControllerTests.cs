@@ -54,37 +54,37 @@ namespace KitchenServiceV2.Tests.Controllers
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(0).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 0.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(1).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 1.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(2).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 2.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(3).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 3.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(4).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 4.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(5).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 5.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
-                        DateTimeUnixSeconds = GetDateFromNow(6).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 6.DaysFromNow().ToUnixTimeSeconds()
                     }
                 });
 
@@ -112,43 +112,43 @@ namespace KitchenServiceV2.Tests.Controllers
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(0).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 0.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(1).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 1.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(2).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 2.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(3).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 3.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(4).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 4.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(5).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 5.DaysFromNow().ToUnixTimeSeconds()
                     },
                     new Plan
                     {
                         Id = new ObjectId("599a98f185142b3ce0f965a0"),
                         PlanItems = new List<PlanItem>{new PlanItem{IsDone = true}},
-                        DateTimeUnixSeconds = GetDateFromNow(6).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 6.DaysFromNow().ToUnixTimeSeconds()
                     }
                 });
 
@@ -184,7 +184,7 @@ namespace KitchenServiceV2.Tests.Controllers
                                 RecipeId = new ObjectId("599a98f185142b3ce0f96598")
                             }
                         },
-                        DateTimeUnixSeconds = GetDateFromNow(0).ToUnixTimeSeconds()
+                        DateTimeUnixSeconds = 0.DaysFromNow().ToUnixTimeSeconds()
                     }
                 });
 
@@ -193,7 +193,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
             var planDto = plans.First();
             Assert.Equal("599a98f185142b3ce0f965a0", planDto.Id);
-            Assert.Equal(GetDateFromNow(0), planDto.DateTime);
+            Assert.Equal(0.DaysFromNow(), planDto.DateTime);
             Assert.Equal(1, planDto.Items.Count);
             Assert.Equal("599a98f185142b3ce0f96598", planDto.Items[0].RecipeId);
             Assert.Equal(false, planDto.Items[0].IsDone);
@@ -359,11 +359,6 @@ namespace KitchenServiceV2.Tests.Controllers
                     items.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659b" && itm.Quantity == 8) &&
                     items.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f9659c" && itm.Quantity == 0)
                 )), Times.Once);
-        }
-
-        private static DateTimeOffset GetDateFromNow(int days)
-        {
-            return DateTimeOffset.UtcNow.AddDays(days).Date;
         }
     }
 }

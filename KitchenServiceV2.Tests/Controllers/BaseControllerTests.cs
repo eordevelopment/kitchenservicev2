@@ -15,6 +15,7 @@ namespace KitchenServiceV2.Tests.Controllers
         protected readonly Mock<IRecipeTypeRepository> RecipeTypeRepositoryMock = new Mock<IRecipeTypeRepository>(MockBehavior.Strict);
         protected readonly Mock<IRecipeRepository> RecipeRepositoryMock = new Mock<IRecipeRepository>(MockBehavior.Strict);
         protected readonly Mock<IPlanRepository> PlanRepositoryMock = new Mock<IPlanRepository>(MockBehavior.Strict);
+        protected readonly Mock<IShoppingListRepository> ShoppingListRepositoryMock = new Mock<IShoppingListRepository>(MockBehavior.Strict);
 
         protected ITestOutputHelper Output;
 

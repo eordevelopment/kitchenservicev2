@@ -11,5 +11,6 @@ namespace KitchenServiceV2.Db.Mongo
         Task<List<Plan>> GetClosed(string userToken, int page, int pageSize);
 
         Task<Plan> Find(string userToken, DateTimeOffset dateTime);
+        Task<List<Plan>> GetOpen(string userToken);
     }
 }

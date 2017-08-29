@@ -17,15 +17,12 @@ namespace KitchenServiceV2.Contract
         public bool IsDone { get; set; }
 
         [DataMember]
-        public DateTime CreatedOn { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
 
         [DataMember]
         public List<ShoppingListItemDto> Items { get; set; }
 
         [DataMember]
         public List<ShoppingListItemDto> OptionalItems { get; set; }
-
-        [DataMember]
-        public List<RecipeDto> Recipes { get; set; }
     }
 }

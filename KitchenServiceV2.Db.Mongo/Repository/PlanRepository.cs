@@ -35,5 +35,12 @@ namespace KitchenServiceV2.Db.Mongo.Repository
                 .Find(x => x.UserToken == userToken && x.DateTimeUnixSeconds == dateTime.ToUnixTimeSeconds())
                 .FirstOrDefaultAsync();
         }
+
+        public Task<List<Plan>> GetOpen(string userToken)
+        {
+            return this.Collection
+                .Find(p => p.UserToken == userToken && !p.IsDone)
+                .ToListAsync();
+        }
     }
 }

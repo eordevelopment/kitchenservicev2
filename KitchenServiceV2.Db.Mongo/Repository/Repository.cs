@@ -76,7 +76,7 @@ namespace KitchenServiceV2.Db.Mongo.Repository
             return this.Collection.InsertOneAsync(e);
         }
 
-        private Task Insert(IReadOnlyCollection<TEntity> entities)
+        private Task Insert(IEnumerable<TEntity> entities)
         {
             return this.Collection.InsertManyAsync(entities);
         }
