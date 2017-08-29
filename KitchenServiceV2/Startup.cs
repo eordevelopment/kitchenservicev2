@@ -45,6 +45,7 @@ namespace KitchenServiceV2
             services.AddScoped<IRecipeRepository, RecipeRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
             services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
+            services.AddSingleton<IShoppingListModel, ShoppingListModel>();
 
             // Auto mapper
             AutoMapperConfig.InitializeMapper();

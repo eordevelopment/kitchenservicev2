@@ -77,6 +77,41 @@ namespace KitchenServiceV2.Controllers
             var itemsById = (await this.GetRecipeItems(recipes)).ToDictionary(x => x.Id);
             if (!itemsById.Any()) return string.Empty;
 
+            var shoppingList = CreateShoppingList(recipes, itemsById);
+
+            await this._shoppingListRepository.Upsert(shoppingList);
+            return shoppingList.Id.ToString();
+        }
+
+        //[HttpGet("/api/list/closed/{page}")]
+        //public IEnumerable<ShoppingListDto> GetClosedLists(int page = 0)
+        //{
+            
+        //}
+
+        //[HttpPut("{id}")]
+        //public ShoppingListDto Put(int id, [FromBody] ShoppingListDto value)
+        //{
+            
+        //}
+
+        [HttpDelete("{id}")]
+        public async Task Delete(string id)
+        {
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var shoppingList = await this._shoppingListRepository.Get(objectId);
+            if (shoppingList == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+            await this._shoppingListRepository.Remove(objectId);
+        }
+
+        [NonAction]
+        private ShoppingList CreateShoppingList(IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById)
+        {
             var recipItemsById = recipes
                 .SelectMany(x => x.RecipeItems)
                 .ToLookup(x => x.ItemId);
@@ -124,35 +159,7 @@ namespace KitchenServiceV2.Controllers
                     shoppingList.OptionalItems.Add(shoppingListItem);
                 }
             }
-
-            await this._shoppingListRepository.Upsert(shoppingList);
-            return shoppingList.Id.ToString();
-        }
-
-        //[HttpGet("/api/list/closed/{page}")]
-        //public IEnumerable<ShoppingListDto> GetClosedLists(int page = 0)
-        //{
-            
-        //}
-
-        //[HttpPut("{id}")]
-        //public ShoppingListDto Put(int id, [FromBody] ShoppingListDto value)
-        //{
-            
-        //}
-
-        [HttpDelete("{id}")]
-        public async Task Delete(string id)
-        {
-            var objectId = Mapper.Map<ObjectId>(id);
-            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
-
-            var shoppingList = await this._shoppingListRepository.Get(objectId);
-            if (shoppingList == null)
-            {
-                throw new ArgumentException($"No resource with id: {id}");
-            }
-            await this._shoppingListRepository.Remove(objectId);
+            return shoppingList;
         }
 
         [NonAction]
