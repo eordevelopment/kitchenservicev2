@@ -153,7 +153,7 @@ namespace KitchenServiceV2.Tests.Controllers
 
             Assert.NotNull(result);
 
-            this.RecipeTypeRepositoryMock.Verify(x => x.Upsert(It.Is<RecipeType>(rt => rt.Name == "test type")), Times.Once);
+            this.RecipeTypeRepositoryMock.Verify(x => x.Upsert(It.Is<RecipeType>(rt => rt.Name == "test type" && rt.UserToken == "UserToken")), Times.Once);
         }
 
         [Fact]

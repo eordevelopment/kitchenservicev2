@@ -5,7 +5,7 @@ namespace KitchenServiceV2.Db.Mongo.Schema
 {
     public class Plan : IDocument
     {
-        public long DateTimeTicks { get; set; }
+        public long DateTimeUnixSeconds { get; set; }
         public bool IsDone { get; set; }
         public List<PlanItem> PlanItems { get; set; }
         public ObjectId Id { get; set; }

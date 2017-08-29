@@ -94,19 +94,20 @@ namespace KitchenServiceV2
                 });
                 cfg.CreateMap<RecipeItemDto, RecipeItem>();
 
-                cfg.CreateMap<Plan, PlanDto>().AfterMap((src, dest) => dest.DateTime = new DateTime(src.DateTimeTicks, DateTimeKind.Utc));
-                cfg.CreateMap<PlanDto, Plan>().AfterMap((src, dest) => dest.DateTimeTicks = src.DateTime.Ticks);
+                cfg.CreateMap<Plan, PlanDto>().AfterMap((src, dest) => dest.DateTime = DateTimeOffset.FromUnixTimeSeconds(src.DateTimeUnixSeconds));
+                cfg.CreateMap<PlanDto, Plan>().AfterMap((src, dest) =>
+                {
+                    dest.DateTimeUnixSeconds = src.DateTime.ToUnixTimeSeconds();
+                    dest.IsDone = src.Items != null && src.Items.All(x => x.IsDone);
+                });
+
+                cfg.CreateMap<PlanItem, PlanItemDto>();
+                cfg.CreateMap<PlanItemDto, PlanItem>();
 
                 cfg.CreateMap<string, ObjectId>().ConvertUsing(s =>
                 {
                     if (string.IsNullOrWhiteSpace(s)) return ObjectId.Empty;
-
-                    ObjectId id;
-                    if (ObjectId.TryParse(s, out id))
-                    {
-                        return id;
-                    }
-                    return ObjectId.Empty;
+                    return ObjectId.TryParse(s, out ObjectId id) ? id : ObjectId.Empty;
                 });
                 cfg.CreateMap<ObjectId, string>().ConvertUsing(id => id.ToString());
             });

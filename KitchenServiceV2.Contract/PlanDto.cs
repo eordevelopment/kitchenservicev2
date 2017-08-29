@@ -11,7 +11,7 @@ namespace KitchenServiceV2.Contract
         public string Id { get; set; }
 
         [DataMember]
-        public DateTime DateTime { get; set; }
+        public DateTimeOffset DateTime { get; set; }
 
         [DataMember]
         public List<PlanItemDto> Items { get; set; }

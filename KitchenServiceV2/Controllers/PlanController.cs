@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
+using KitchenServiceV2.Db.Mongo.Schema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 
 namespace KitchenServiceV2.Controllers
 {
@@ -31,7 +33,7 @@ namespace KitchenServiceV2.Controllers
             var startDate = DateTimeOffset.Now.Date;
             var endDate = startDate.AddDays(number);
 
-            var openPlans = await this._planRepository.GetOpen(LoggedInUserToken, startDate, endDate);
+            var openPlans = await this._planRepository.GetOpenOrInRange(LoggedInUserToken, startDate, endDate);
             var planDtos = openPlans.Select(Mapper.Map<PlanDto>).ToList();
             var dt = DateTimeOffset.UtcNow;
 
@@ -60,7 +62,93 @@ namespace KitchenServiceV2.Controllers
         [HttpPost]
         public async Task Post([FromBody] PlanDto value)
         {
-            
+            if (value.DateTime == null || value.DateTime == DateTimeOffset.MinValue)
+            {
+                throw new InvalidOperationException("Invalid date");
+            }
+            var existingPlan = await this._planRepository.Find(LoggedInUserToken, value.DateTime);
+            if (existingPlan != null)
+            {
+                throw new InvalidOperationException("Plan already exists.");
+            }
+
+            var plan = Mapper.Map<Plan>(value);
+            plan.UserToken = LoggedInUserToken;
+
+            var cookedMeals = plan.PlanItems.Where(x => x.IsDone);
+            await this.UpdateStock(cookedMeals, null);
+
+            await this._planRepository.Upsert(plan);
+        }
+
+        [HttpPut("{id}")]
+        public async Task Put(string id, [FromBody] PlanDto value)
+        {
+            if (value.DateTime == null || value.DateTime == DateTimeOffset.MinValue)
+            {
+                throw new InvalidOperationException("Invalid date");
+            }
+
+            var existingPlan = await this._planRepository.Find(LoggedInUserToken, value.DateTime);
+            if (existingPlan != null && existingPlan.Id.ToString() != id)
+            {
+                throw new InvalidOperationException("Plan already exists.");
+            }
+
+            var plan = await this._planRepository.Get(new ObjectId(id));
+            if (plan == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+
+            var updatedPlan = Mapper.Map<Plan>(value);
+            updatedPlan.Id = plan.Id;
+            updatedPlan.UserToken = plan.UserToken;
+            await this.UpdateStock(updatedPlan.PlanItems.Where(x => x.IsDone), plan.PlanItems);
+
+            await this._planRepository.Upsert(plan);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task Delete(string id)
+        {
+            var planId = new ObjectId(id);
+            var plan = await this._planRepository.Get(planId);
+            if (plan == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+            await this._planRepository.Remove(planId);
+        }
+
+        [NonAction]
+        private async Task UpdateStock(IEnumerable<PlanItem> updatedItems, IReadOnlyCollection<PlanItem> originalItems)
+        {
+            //First, find all the recipes that have been updated
+            var recipesToUpdate = (from planItem in updatedItems
+                                   let originalItem = originalItems?.FirstOrDefault(x => x.RecipeId == planItem.RecipeId)
+                                   where originalItem == null || !originalItem.IsDone
+                                   select planItem.RecipeId).Distinct().ToList();
+
+            var recipes = await this._recipeRepository.Get(recipesToUpdate);
+
+            //Next, find all the items that need to be updated
+            var recipeItems = recipes.SelectMany(x => x.RecipeItems).ToList();
+            var itemIds = recipeItems.Select(x => x.ItemId).Distinct().ToList();
+
+            var itemsById = (await this._itemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+
+            //Finally, update the stock
+            foreach (var recipeItem in recipeItems)
+            {
+                if(!itemsById.ContainsKey(recipeItem.ItemId)) continue;
+
+                var item = itemsById[recipeItem.ItemId];
+                item.Quantity -= recipeItem.Amount;
+                if (item.Quantity < 0) item.Quantity = 0;
+            }
+
+            await this._itemRepository.Upsert(itemsById.Values);
         }
     }
 }

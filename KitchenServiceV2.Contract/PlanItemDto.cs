@@ -9,7 +9,7 @@ namespace KitchenServiceV2.Contract
         public bool IsDone { get; set; }
 
         [DataMember]
-        public long RecipeId { get; set; }
+        public string RecipeId { get; set; }
 
         [DataMember]
         public string RecipeName { get; set; }

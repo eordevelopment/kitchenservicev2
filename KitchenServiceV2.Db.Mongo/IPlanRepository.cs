@@ -7,7 +7,9 @@ namespace KitchenServiceV2.Db.Mongo
 {
     public interface IPlanRepository : IRepository<Plan>
     {
-        Task<List<Plan>> GetOpen(string userToken, DateTime start, DateTime end);
+        Task<List<Plan>> GetOpenOrInRange(string userToken, DateTimeOffset start, DateTimeOffset end);
         Task<List<Plan>> GetClosed(string userToken, int page, int pageSize);
+
+        Task<Plan> Find(string userToken, DateTimeOffset dateTime);
     }
 }
