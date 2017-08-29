@@ -14,17 +14,11 @@ namespace KitchenServiceV2.Controllers
 {
     [Route("api/[controller]")]
     [Authorize(Policy = "HasToken")]
-    public class PlanController : BaseController
+    public class PlanController : BaseInventoryController
     {
-        private readonly IPlanRepository _planRepository;
-        private readonly IItemRepository _itemRepository;
-        private readonly IRecipeRepository _recipeRepository;
-
         public PlanController(IPlanRepository planRepository, IItemRepository itemRepository, IRecipeRepository recipeRepository)
+            :base(planRepository, itemRepository, recipeRepository)
         {
-            this._planRepository = planRepository;
-            this._itemRepository = itemRepository;
-            this._recipeRepository = recipeRepository;
         }
 
         [HttpGet("/api/plan/upcoming/{number}")]
@@ -33,7 +27,7 @@ namespace KitchenServiceV2.Controllers
             var startDate = DateTimeOffset.Now.Date;
             var endDate = startDate.AddDays(number);
 
-            var openPlans = await this._planRepository.GetOpenOrInRange(LoggedInUserToken, startDate, endDate);
+            var openPlans = await this.PlanRepository.GetOpenOrInRange(LoggedInUserToken, startDate, endDate);
             var planDtos = openPlans.Select(Mapper.Map<PlanDto>).ToList();
             var dt = DateTimeOffset.UtcNow;
 
@@ -59,7 +53,7 @@ namespace KitchenServiceV2.Controllers
         [HttpGet("/api/plan/closed/{page}")]
         public async Task<List<PlanDto>> GetClosedPlans(int page = 0)
         {
-            var plans = await this._planRepository.GetClosed(LoggedInUserToken, page, 10);
+            var plans = await this.PlanRepository.GetClosed(LoggedInUserToken, page, 10);
             var dtos = plans.Select(Mapper.Map<PlanDto>).ToList();
 
             await this.SetRecipeNames(dtos, plans);
@@ -74,7 +68,7 @@ namespace KitchenServiceV2.Controllers
             {
                 throw new InvalidOperationException("Invalid date");
             }
-            var existingPlan = await this._planRepository.Find(LoggedInUserToken, value.DateTime);
+            var existingPlan = await this.PlanRepository.Find(LoggedInUserToken, value.DateTime);
             if (existingPlan != null)
             {
                 throw new InvalidOperationException("Plan already exists.");
@@ -86,7 +80,7 @@ namespace KitchenServiceV2.Controllers
             var cookedMeals = plan.PlanItems.Where(x => x.IsDone);
             await this.UpdateStock(cookedMeals, null);
 
-            await this._planRepository.Upsert(plan);
+            await this.PlanRepository.Upsert(plan);
         }
 
         [HttpPut("{id}")]
@@ -97,7 +91,7 @@ namespace KitchenServiceV2.Controllers
                 throw new InvalidOperationException("Invalid date");
             }
 
-            var existingPlan = await this._planRepository.Find(LoggedInUserToken, value.DateTime);
+            var existingPlan = await this.PlanRepository.Find(LoggedInUserToken, value.DateTime);
             if (existingPlan != null && existingPlan.Id.ToString() != id)
             {
                 throw new InvalidOperationException("Plan already exists.");
@@ -106,7 +100,7 @@ namespace KitchenServiceV2.Controllers
             var objectId = Mapper.Map<ObjectId>(id);
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
-            var plan = await this._planRepository.Get(objectId);
+            var plan = await this.PlanRepository.Get(objectId);
             if (plan == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
@@ -117,7 +111,7 @@ namespace KitchenServiceV2.Controllers
             updatedPlan.UserToken = plan.UserToken;
             await this.UpdateStock(updatedPlan.PlanItems.Where(x => x.IsDone), plan.PlanItems);
 
-            await this._planRepository.Upsert(plan);
+            await this.PlanRepository.Upsert(plan);
         }
 
         [HttpDelete("{id}")]
@@ -126,12 +120,12 @@ namespace KitchenServiceV2.Controllers
             var objectId = Mapper.Map<ObjectId>(id);
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
-            var plan = await this._planRepository.Get(objectId);
+            var plan = await this.PlanRepository.Get(objectId);
             if (plan == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
-            await this._planRepository.Remove(objectId);
+            await this.PlanRepository.Remove(objectId);
         }
 
         [NonAction]
@@ -145,15 +139,14 @@ namespace KitchenServiceV2.Controllers
 
             if (recipesToUpdate.Any())
             {
-                var recipes = await this._recipeRepository.Get(recipesToUpdate);
+                var recipes = await this.RecipeRepository.Get(recipesToUpdate);
+                var items = await this.GetRecipeItems(recipes);
 
-                if (recipes.Any())
+                if (items.Any())
                 {
                     //Next, find all the items that need to be updated
                     var recipeItems = recipes.SelectMany(x => x.RecipeItems).ToList();
-                    var itemIds = recipeItems.Select(x => x.ItemId).Distinct().ToList();
-
-                    var itemsById = (await this._itemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+                    var itemsById = items.ToDictionary(x => x.Id);
 
                     //Finally, update the stock
                     foreach (var recipeItem in recipeItems)
@@ -165,7 +158,7 @@ namespace KitchenServiceV2.Controllers
                         if (item.Quantity < 0) item.Quantity = 0;
                     }
 
-                    await this._itemRepository.Upsert(itemsById.Values);
+                    await this.ItemRepository.Upsert(itemsById.Values);
                 }
             }
         }
@@ -173,8 +166,7 @@ namespace KitchenServiceV2.Controllers
         [NonAction]
         private async Task SetRecipeNames(IEnumerable<PlanDto> planDtos, IEnumerable<Plan> dbPlans)
         {
-            var recipeIds = dbPlans.Where(x => x.PlanItems != null).SelectMany(x => x.PlanItems).Select(x => x.RecipeId).Distinct().ToList();
-            var recipesById = (await this._recipeRepository.Get(recipeIds)).ToDictionary(x => x.Id.ToString());
+            var recipesById = (await this.GetPlanRecipes(dbPlans)).ToDictionary(x => x.Id.ToString());
 
             foreach (var planDto in planDtos.Where(x => x.Items != null))
             {
