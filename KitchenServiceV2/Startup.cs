@@ -1,17 +1,12 @@
-﻿using System;
-using System.Linq;
-using AutoMapper;
-using KitchenServiceV2.Contract;
+﻿using System.Linq;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Repository;
-using KitchenServiceV2.Db.Mongo.Schema;
 using KitchenServiceV2.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
 
 namespace KitchenServiceV2
 {
@@ -49,7 +44,7 @@ namespace KitchenServiceV2
             services.AddScoped<IRecipeRepository, RecipeRepository>();
 
             // Auto mapper
-            InitializeMapper();
+            AutoMapperConfig.InitializeMapper();
 
             services.AddMvc();
             services.AddCors();
@@ -68,49 +63,6 @@ namespace KitchenServiceV2
 
             app.UseMiddleware(typeof(ErrorHandlingMiddleware));
             app.UseMvc();
-        }
-
-        public static void InitializeMapper()
-        {
-            Mapper.Initialize(cfg =>
-            {
-                cfg.CreateMap<Category, CategoryDto>();
-                cfg.CreateMap<CategoryDto, Category>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
-
-                cfg.CreateMap<Item, ItemDto>();
-                cfg.CreateMap<ItemDto, Item>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
-
-                cfg.CreateMap<RecipeType, RecipeTypeDto>();
-                cfg.CreateMap<RecipeTypeDto, RecipeType>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
-
-                cfg.CreateMap<Recipe, RecipeDto>();
-                cfg.CreateMap<RecipeDto, Recipe>().AfterMap((src, dest) => dest.Name = dest.Name.ToLower());
-
-                cfg.CreateMap<RecipeStep, RecipeStepDto>();
-                cfg.CreateMap<RecipeStepDto, RecipeStep>();
-                cfg.CreateMap<RecipeItem, RecipeItemDto>().AfterMap((src, dest) => dest.Item = new ItemDto
-                {
-                    Id = src.ItemId.ToString()
-                });
-                cfg.CreateMap<RecipeItemDto, RecipeItem>();
-
-                cfg.CreateMap<Plan, PlanDto>().AfterMap((src, dest) => dest.DateTime = DateTimeOffset.FromUnixTimeSeconds(src.DateTimeUnixSeconds));
-                cfg.CreateMap<PlanDto, Plan>().AfterMap((src, dest) =>
-                {
-                    dest.DateTimeUnixSeconds = src.DateTime.ToUnixTimeSeconds();
-                    dest.IsDone = src.Items != null && src.Items.All(x => x.IsDone);
-                });
-
-                cfg.CreateMap<PlanItem, PlanItemDto>();
-                cfg.CreateMap<PlanItemDto, PlanItem>();
-
-                cfg.CreateMap<string, ObjectId>().ConvertUsing(s =>
-                {
-                    if (string.IsNullOrWhiteSpace(s)) return ObjectId.Empty;
-                    return ObjectId.TryParse(s, out ObjectId id) ? id : ObjectId.Empty;
-                });
-                cfg.CreateMap<ObjectId, string>().ConvertUsing(id => id.ToString());
-            });
         }
     }
 }

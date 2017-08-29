@@ -59,15 +59,17 @@ namespace KitchenServiceV2.Controllers
                 throw new InvalidOperationException("Name cannot be empty");
             }
 
-            var recipeTypeId = new ObjectId(id);
-            var existing = await this._recipeTypeRepository.Get(recipeTypeId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var existing = await this._recipeTypeRepository.Get(objectId);
             if (existing == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
 
             var recipeType = Mapper.Map<RecipeType>(value);
-            recipeType.Id = recipeTypeId;
+            recipeType.Id = objectId;
             recipeType.UserToken = LoggedInUserToken;
 
             await this._recipeTypeRepository.Upsert(recipeType);
@@ -78,14 +80,16 @@ namespace KitchenServiceV2.Controllers
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {
-            var recipeTypeId = new ObjectId(id);
-            var existing = await this._recipeTypeRepository.Get(recipeTypeId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var existing = await this._recipeTypeRepository.Get(objectId);
             if (existing == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
 
-            await this._recipeTypeRepository.Remove(recipeTypeId);
+            await this._recipeTypeRepository.Remove(objectId);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace KitchenServiceV2.Tests.Controllers
         public BaseControllerTests(ITestOutputHelper output)
         {
             this.Output = output;
-            Startup.InitializeMapper();
+            AutoMapperConfig.InitializeMapper();
         }
         protected void SetupController(BaseController controller)
         {

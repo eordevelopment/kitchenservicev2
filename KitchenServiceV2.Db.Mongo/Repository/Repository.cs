@@ -33,6 +33,7 @@ namespace KitchenServiceV2.Db.Mongo.Repository
 
         public Task<List<TEntity>> Get(IReadOnlyCollection<ObjectId> ids)
         {
+            if (ids == null || !ids.Any()) return Task.FromResult(new List<TEntity>());
             return this.Collection.Find(p => ids.Contains(p.Id)).ToListAsync();
         }
 

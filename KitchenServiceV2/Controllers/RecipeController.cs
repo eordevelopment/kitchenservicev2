@@ -56,7 +56,9 @@ namespace KitchenServiceV2.Controllers
                 throw new ArgumentException("Please provide an id");
             }
 
-            var objectId = new ObjectId(id);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
             var recipe = await this._recipeRepository.Get(objectId);
             if (recipe == null) throw new ArgumentException($"No resource with id: {id}");
 
@@ -115,8 +117,10 @@ namespace KitchenServiceV2.Controllers
                 throw new ArgumentException("Please provide an id");
             }
 
-            var recipeId = new ObjectId(id);
-            var existingRecipe = await this._recipeRepository.Get(recipeId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var existingRecipe = await this._recipeRepository.Get(objectId);
             if (existingRecipe == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
@@ -124,7 +128,7 @@ namespace KitchenServiceV2.Controllers
 
             var recipe = Mapper.Map<Recipe>(value);
             recipe.UserToken = LoggedInUserToken;
-            recipe.Id = recipeId;
+            recipe.Id = objectId;
             recipe.RecipeTypeId = new ObjectId(value.RecipeType.Id);
 
             if (recipe.RecipeItems != null && recipe.RecipeItems.Any())
@@ -138,13 +142,15 @@ namespace KitchenServiceV2.Controllers
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {
-            var recipeId = new ObjectId(id);
-            var recipe = await this._recipeRepository.Get(recipeId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var recipe = await this._recipeRepository.Get(objectId);
             if (recipe == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
-            await this._recipeRepository.Remove(recipeId);
+            await this._recipeRepository.Remove(objectId);
         }
 
         [NonAction]

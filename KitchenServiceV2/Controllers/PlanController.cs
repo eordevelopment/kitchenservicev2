@@ -49,14 +49,22 @@ namespace KitchenServiceV2.Controllers
                 }
                 dt = dt.AddDays(1);
             }
-            return planDtos;
+            var validPlans = planDtos.Where(x => x.Items == null || x.Items.Any(y => !y.IsDone) || !x.Items.Any()).ToList();
+
+            await this.SetRecipeNames(validPlans, openPlans);
+
+            return validPlans;
         }
 
         [HttpGet("/api/plan/closed/{page}")]
         public async Task<List<PlanDto>> GetClosedPlans(int page = 0)
         {
             var plans = await this._planRepository.GetClosed(LoggedInUserToken, page, 10);
-            return plans.Select(Mapper.Map<PlanDto>).ToList();
+            var dtos = plans.Select(Mapper.Map<PlanDto>).ToList();
+
+            await this.SetRecipeNames(dtos, plans);
+
+            return dtos;
         }
 
         [HttpPost]
@@ -95,7 +103,10 @@ namespace KitchenServiceV2.Controllers
                 throw new InvalidOperationException("Plan already exists.");
             }
 
-            var plan = await this._planRepository.Get(new ObjectId(id));
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var plan = await this._planRepository.Get(objectId);
             if (plan == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
@@ -112,13 +123,15 @@ namespace KitchenServiceV2.Controllers
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {
-            var planId = new ObjectId(id);
-            var plan = await this._planRepository.Get(planId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var plan = await this._planRepository.Get(objectId);
             if (plan == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
-            await this._planRepository.Remove(planId);
+            await this._planRepository.Remove(objectId);
         }
 
         [NonAction]
@@ -127,28 +140,50 @@ namespace KitchenServiceV2.Controllers
             //First, find all the recipes that have been updated
             var recipesToUpdate = (from planItem in updatedItems
                                    let originalItem = originalItems?.FirstOrDefault(x => x.RecipeId == planItem.RecipeId)
-                                   where originalItem == null || !originalItem.IsDone
+                                   where planItem.IsDone && (originalItem == null || !originalItem.IsDone)
                                    select planItem.RecipeId).Distinct().ToList();
 
-            var recipes = await this._recipeRepository.Get(recipesToUpdate);
-
-            //Next, find all the items that need to be updated
-            var recipeItems = recipes.SelectMany(x => x.RecipeItems).ToList();
-            var itemIds = recipeItems.Select(x => x.ItemId).Distinct().ToList();
-
-            var itemsById = (await this._itemRepository.Get(itemIds)).ToDictionary(x => x.Id);
-
-            //Finally, update the stock
-            foreach (var recipeItem in recipeItems)
+            if (recipesToUpdate.Any())
             {
-                if(!itemsById.ContainsKey(recipeItem.ItemId)) continue;
+                var recipes = await this._recipeRepository.Get(recipesToUpdate);
 
-                var item = itemsById[recipeItem.ItemId];
-                item.Quantity -= recipeItem.Amount;
-                if (item.Quantity < 0) item.Quantity = 0;
+                if (recipes.Any())
+                {
+                    //Next, find all the items that need to be updated
+                    var recipeItems = recipes.SelectMany(x => x.RecipeItems).ToList();
+                    var itemIds = recipeItems.Select(x => x.ItemId).Distinct().ToList();
+
+                    var itemsById = (await this._itemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+
+                    //Finally, update the stock
+                    foreach (var recipeItem in recipeItems)
+                    {
+                        if (!itemsById.ContainsKey(recipeItem.ItemId)) continue;
+
+                        var item = itemsById[recipeItem.ItemId];
+                        item.Quantity -= recipeItem.Amount;
+                        if (item.Quantity < 0) item.Quantity = 0;
+                    }
+
+                    await this._itemRepository.Upsert(itemsById.Values);
+                }
             }
+        }
 
-            await this._itemRepository.Upsert(itemsById.Values);
+        [NonAction]
+        private async Task SetRecipeNames(IEnumerable<PlanDto> planDtos, IEnumerable<Plan> dbPlans)
+        {
+            var recipeIds = dbPlans.Where(x => x.PlanItems != null).SelectMany(x => x.PlanItems).Select(x => x.RecipeId).Distinct().ToList();
+            var recipesById = (await this._recipeRepository.Get(recipeIds)).ToDictionary(x => x.Id.ToString());
+
+            foreach (var planDto in planDtos.Where(x => x.Items != null))
+            {
+                foreach (var itemDto in planDto.Items)
+                {
+                    if (!recipesById.ContainsKey(itemDto.RecipeId)) continue;
+                    itemDto.RecipeName = recipesById[itemDto.RecipeId].Name;
+                }
+            }
         }
     }
 }

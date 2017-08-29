@@ -40,7 +40,9 @@ namespace KitchenServiceV2.Controllers
                 throw new ArgumentException("Please provide an id");
             }
 
-            var objectId = new ObjectId(id);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if(objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
             var category = await this._categoryRepository.Get(objectId);
             if (category == null) throw new ArgumentException($"No resource with id: {id}");
 
@@ -79,15 +81,17 @@ namespace KitchenServiceV2.Controllers
                 throw new ArgumentException("Please provide an id");
             }
 
-            var categoryId = new ObjectId(id);
-            var existingCategory = await this._categoryRepository.Get(categoryId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var existingCategory = await this._categoryRepository.Get(objectId);
             if (existingCategory == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
 
             var category = await this.PopulateCategory(value);
-            category.Id = categoryId;
+            category.Id = objectId;
 
             // save the category
             await this._categoryRepository.Upsert(category);
@@ -96,13 +100,15 @@ namespace KitchenServiceV2.Controllers
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {
-            var categoryId = new ObjectId(id);
-            var existingCategory = await this._categoryRepository.Get(categoryId);
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var existingCategory = await this._categoryRepository.Get(objectId);
             if (existingCategory == null)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
-            await this._categoryRepository.Remove(categoryId);
+            await this._categoryRepository.Remove(objectId);
         }
 
         private async Task<Category> PopulateCategory(CategoryDto value)
