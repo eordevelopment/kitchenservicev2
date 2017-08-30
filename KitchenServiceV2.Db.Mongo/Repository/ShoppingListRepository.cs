@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo.Schema;
+using MongoDB.Driver;
 
 namespace KitchenServiceV2.Db.Mongo.Repository
 {
@@ -12,12 +13,19 @@ namespace KitchenServiceV2.Db.Mongo.Repository
 
         public Task<ShoppingList> GetOpen(string loggedInUserToken)
         {
-            throw new System.NotImplementedException();
+            return this.Collection
+                .Find(x => x.UserToken == loggedInUserToken && !x.IsDone)
+                .FirstOrDefaultAsync();
         }
 
         public Task<List<ShoppingList>> GetClosed(string loggedInUserToken, int page, int pageSize)
         {
-            throw new System.NotImplementedException();
+            return this.Collection
+                .Find(p => p.UserToken == loggedInUserToken && p.IsDone)
+                .SortByDescending(x => x.CreatedOnUnixSeconds)
+                .Skip(page * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
         }
     }
 }
