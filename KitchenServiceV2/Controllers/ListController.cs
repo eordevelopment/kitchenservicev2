@@ -17,14 +17,17 @@ namespace KitchenServiceV2.Controllers
     public class ListController : BaseInventoryController
     {
         private readonly IShoppingListRepository _shoppingListRepository;
+        private readonly IShoppingListModel _shoppingListModel;
 
         public ListController(
             IPlanRepository planRepository, 
             IItemRepository itemRepository, 
             IShoppingListRepository shoppingListRepository,
-            IRecipeRepository recipeRepository) : base(planRepository, itemRepository, recipeRepository)
+            IRecipeRepository recipeRepository,
+            IShoppingListModel shoppingListModel) : base(planRepository, itemRepository, recipeRepository)
         {
             this._shoppingListRepository = shoppingListRepository;
+            this._shoppingListModel = shoppingListModel;
         }
 
         [HttpGet("/api/list/open")]
@@ -77,7 +80,7 @@ namespace KitchenServiceV2.Controllers
             var itemsById = (await this.GetRecipeItems(recipes)).ToDictionary(x => x.Id);
             if (!itemsById.Any()) return string.Empty;
 
-            var shoppingList = CreateShoppingList(recipes, itemsById);
+            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, recipes, itemsById);
 
             await this._shoppingListRepository.Upsert(shoppingList);
             return shoppingList.Id.ToString();
@@ -107,59 +110,6 @@ namespace KitchenServiceV2.Controllers
                 throw new ArgumentException($"No resource with id: {id}");
             }
             await this._shoppingListRepository.Remove(objectId);
-        }
-
-        [NonAction]
-        private ShoppingList CreateShoppingList(IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById)
-        {
-            var recipItemsById = recipes
-                .SelectMany(x => x.RecipeItems)
-                .ToLookup(x => x.ItemId);
-
-            var now = DateTimeOffset.UtcNow;
-            var shoppingList = new ShoppingList
-            {
-                CreatedOnUnixSeconds = now.ToUnixTimeSeconds(),
-                Name = now.ToString("ddd, MMM-dd yyyy"),
-                IsDone = false,
-                UserToken = LoggedInUserToken,
-                Items = new List<ShoppingListItem>(),
-                OptionalItems = new List<ShoppingListItem>()
-            };
-
-
-            foreach (var itemCollection in recipItemsById)
-            {
-                if (!itemsById.ContainsKey(itemCollection.Key)) continue;
-
-                float inStock = 0, needed = 0;
-                var item = itemsById[itemCollection.Key];
-
-                foreach (var recipeItem in itemCollection)
-                {
-                    inStock = item.Quantity;
-                    needed += recipeItem.Amount;
-                }
-
-                var shoppingListItem = new ShoppingListItem
-                {
-                    ItemId = itemCollection.Key,
-                    IsDone = false,
-                    Amount = needed - inStock,
-                    TotalAmount = needed
-                };
-
-                if (needed > inStock)
-                {
-                    shoppingList.Items.Add(shoppingListItem);
-                }
-                else
-                {
-                    shoppingListItem.Amount = shoppingListItem.TotalAmount;
-                    shoppingList.OptionalItems.Add(shoppingListItem);
-                }
-            }
-            return shoppingList;
         }
 
         [NonAction]

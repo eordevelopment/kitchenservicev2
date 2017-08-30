@@ -15,9 +15,16 @@ namespace KitchenServiceV2.Tests.Controllers
     {
         private readonly ListController _sut;
 
+        private readonly Mock<IShoppingListModel> _shoppingListModelMock = new Mock<IShoppingListModel>(MockBehavior.Strict);
+
         public ListControllerTests(ITestOutputHelper output) : base(output)
         {
-            this._sut = new ListController(this.PlanRepositoryMock.Object, this.ItemRepositoryMock.Object, this.ShoppingListRepositoryMock.Object, this.RecipeRepositoryMock.Object);
+            this._sut = new ListController(
+                this.PlanRepositoryMock.Object, 
+                this.ItemRepositoryMock.Object, 
+                this.ShoppingListRepositoryMock.Object, 
+                this.RecipeRepositoryMock.Object,
+                this._shoppingListModelMock.Object);
             this.SetupController(this._sut);
         }
 
