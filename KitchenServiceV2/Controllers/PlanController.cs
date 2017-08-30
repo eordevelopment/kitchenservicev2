@@ -101,7 +101,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var plan = await this.PlanRepository.Get(objectId);
-            if (plan == null)
+            if (plan == null || plan.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
@@ -121,7 +121,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var plan = await this.PlanRepository.Get(objectId);
-            if (plan == null)
+            if (plan == null || plan.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }

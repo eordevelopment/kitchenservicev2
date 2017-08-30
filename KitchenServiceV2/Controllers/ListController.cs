@@ -54,7 +54,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var list = await this._shoppingListRepository.Get(objectId);
-            if (list == null) throw new ArgumentException($"No resource with id: {id}");
+            if (list == null || list.UserToken != LoggedInUserToken) throw new ArgumentException($"No resource with id: {id}");
 
             var dto = Mapper.Map<ShoppingListDto>(list);
             await this.PopulateItems(dto, list);
@@ -100,7 +100,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var existingList = await this._shoppingListRepository.Get(objectId);
-            if (existingList == null)
+            if (existingList == null || existingList.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
@@ -148,7 +148,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var shoppingList = await this._shoppingListRepository.Get(objectId);
-            if (shoppingList == null)
+            if (shoppingList == null || shoppingList.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }

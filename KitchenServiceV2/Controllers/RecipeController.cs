@@ -60,7 +60,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var recipe = await this._recipeRepository.Get(objectId);
-            if (recipe == null) throw new ArgumentException($"No resource with id: {id}");
+            if (recipe == null || recipe.UserToken != LoggedInUserToken) throw new ArgumentException($"No resource with id: {id}");
 
             var dto = Mapper.Map<RecipeDto>(recipe);
 
@@ -86,7 +86,7 @@ namespace KitchenServiceV2.Controllers
         [HttpPost]
         public async Task Post([FromBody] RecipeDto value)
         {
-            this.ValidateRecipe(value);
+            ValidateRecipe(value);
 
             var existingRecipe = await this._recipeRepository.Find(LoggedInUserToken, value.Name);
             if (existingRecipe != null)
@@ -110,7 +110,7 @@ namespace KitchenServiceV2.Controllers
         [HttpPut("{id}")]
         public async Task Put(string id, [FromBody] RecipeDto value)
         {
-            this.ValidateRecipe(value);
+            ValidateRecipe(value);
 
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -121,7 +121,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var existingRecipe = await this._recipeRepository.Get(objectId);
-            if (existingRecipe == null)
+            if (existingRecipe == null || existingRecipe.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
@@ -146,7 +146,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var recipe = await this._recipeRepository.Get(objectId);
-            if (recipe == null)
+            if (recipe == null || recipe.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
@@ -154,7 +154,7 @@ namespace KitchenServiceV2.Controllers
         }
 
         [NonAction]
-        private void ValidateRecipe(RecipeDto value)
+        private static void ValidateRecipe(RecipeDto value)
         {
             if (string.IsNullOrWhiteSpace(value.Name))
             {

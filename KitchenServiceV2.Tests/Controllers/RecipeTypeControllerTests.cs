@@ -70,7 +70,10 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task DeleteShouldDelete()
         {
-            this.RecipeTypeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new RecipeType());
+            this.RecipeTypeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new RecipeType
+            {
+                UserToken = "UserToken"
+            });
             this.RecipeTypeRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.CompletedTask);
 
             await this._sut.Delete("599a98f185142b3ce0f9659c");
@@ -160,7 +163,10 @@ namespace KitchenServiceV2.Tests.Controllers
         public async Task PutShouldSave()
         {
             this.RecipeTypeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
-                .ReturnsAsync(new RecipeType());
+                .ReturnsAsync(new RecipeType
+                {
+                    UserToken = "UserToken"
+                });
 
             this.RecipeTypeRepositoryMock.Setup(x => x.Upsert(It.IsAny<RecipeType>())).Returns(Task.CompletedTask);
 

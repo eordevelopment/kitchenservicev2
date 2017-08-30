@@ -63,7 +63,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var existing = await this._recipeTypeRepository.Get(objectId);
-            if (existing == null)
+            if (existing == null || existing.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
@@ -84,7 +84,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var existing = await this._recipeTypeRepository.Get(objectId);
-            if (existing == null)
+            if (existing == null || existing.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }

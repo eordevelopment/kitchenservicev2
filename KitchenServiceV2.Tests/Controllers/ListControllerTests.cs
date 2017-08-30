@@ -172,7 +172,10 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task DeleteShouldDelete()
         {
-            this.ShoppingListRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new ShoppingList());
+            this.ShoppingListRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>())).ReturnsAsync(new ShoppingList
+            {
+                UserToken = "UserToken"
+            });
             this.ShoppingListRepositoryMock.Setup(x => x.Remove(It.IsAny<ObjectId>())).Returns(Task.CompletedTask);
 
             await this._sut.Delete("599a98f185142b3ce0f9659c");

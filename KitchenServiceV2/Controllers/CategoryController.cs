@@ -44,7 +44,7 @@ namespace KitchenServiceV2.Controllers
             if(objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var category = await this._categoryRepository.Get(objectId);
-            if (category == null) throw new ArgumentException($"No resource with id: {id}");
+            if (category == null || category.UserToken != LoggedInUserToken) throw new ArgumentException($"No resource with id: {id}");
 
             var items = await this._itemRepository.Get(category.ItemIds);
 
@@ -85,7 +85,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var existingCategory = await this._categoryRepository.Get(objectId);
-            if (existingCategory == null)
+            if (existingCategory == null || existingCategory.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
@@ -104,7 +104,7 @@ namespace KitchenServiceV2.Controllers
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
             var existingCategory = await this._categoryRepository.Get(objectId);
-            if (existingCategory == null)
+            if (existingCategory == null || existingCategory.UserToken != LoggedInUserToken)
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }
