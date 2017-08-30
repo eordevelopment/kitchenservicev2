@@ -55,6 +55,7 @@ namespace KitchenServiceV2
                 cfg.CreateMap<ShoppingListDto, ShoppingList>().AfterMap((src, dest) =>
                 {
                     dest.CreatedOnUnixSeconds = src.CreatedOn.ToUnixTimeSeconds();
+                    dest.IsDone = src.IsDone || src.Items.All(itm => itm.IsDone);
                 });
 
                 cfg.CreateMap<ShoppingListItem, ShoppingListItemDto>().AfterMap((src, dest) =>

@@ -86,17 +86,60 @@ namespace KitchenServiceV2.Controllers
             return shoppingList.Id.ToString();
         }
 
-        //[HttpGet("/api/list/closed/{page}")]
-        //public IEnumerable<ShoppingListDto> GetClosedLists(int page = 0)
-        //{
-            
-        //}
+        [HttpGet("/api/list/closed/{page}")]
+        public async Task<IEnumerable<ShoppingListDto>> GetClosedLists(int page = 0)
+        {
+            var lists = await this._shoppingListRepository.GetClosed(LoggedInUserToken, page, 10);
+            return lists.Select(Mapper.Map<ShoppingListDto>);
+        }
 
-        //[HttpPut("{id}")]
-        //public ShoppingListDto Put(int id, [FromBody] ShoppingListDto value)
-        //{
-            
-        //}
+        [HttpPut("{id}")]
+        public async Task<ShoppingListDto> Put(int id, [FromBody] ShoppingListDto value)
+        {
+            var objectId = Mapper.Map<ObjectId>(id);
+            if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
+
+            var existingList = await this._shoppingListRepository.Get(objectId);
+            if (existingList == null)
+            {
+                throw new ArgumentException($"No resource with id: {id}");
+            }
+            var existingItemsById = existingList.Items.ToDictionary(x => x.ItemId);
+
+            var updatedList = Mapper.Map<ShoppingList>(value);
+            updatedList.UserToken = LoggedInUserToken;
+            updatedList.Id = existingList.Id;
+
+            var itemIds = updatedList.Items.Select(x => x.ItemId).ToList();
+            if (itemIds.Any())
+            {
+                var itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+
+                foreach (var shoppingListItem in updatedList.Items)
+                {
+                    if(!itemsById.ContainsKey(shoppingListItem.ItemId)) continue;
+                    var item = itemsById[shoppingListItem.ItemId];
+
+                    var existingItem = existingItemsById.ContainsKey(shoppingListItem.ItemId) ? existingItemsById[shoppingListItem.ItemId] : null;
+                    if (shoppingListItem.IsDone && (existingItem == null || !existingItem.IsDone))
+                    {
+                        // decrement stock
+                        item.Quantity -= shoppingListItem.Amount;
+                    }
+                    else if (!shoppingListItem.IsDone && existingItem != null && existingItem.IsDone)
+                    {
+                        //increment stock
+                        item.Quantity += shoppingListItem.Amount;
+                    }
+                }
+
+                await this.ItemRepository.Upsert(itemsById.Values);
+            }
+
+            await this._shoppingListRepository.Upsert(updatedList);
+
+            return value;
+        }
 
         [HttpDelete("{id}")]
         public async Task Delete(string id)
