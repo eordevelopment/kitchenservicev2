@@ -92,6 +92,26 @@ namespace KitchenServiceV2.Controllers
             return dto;
         }
 
+        [HttpGet("/api/recipe/viewrecipe/{id}")]
+        public async Task<RecipeDto> ViewRecipe(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentException("Please provide a key");
+            }
+            var recipe = await this._recipeRepository.Find(id);
+            if(recipe == null) throw new ArgumentException($"No resource with id: {id}");
+
+            var result = Mapper.Map<RecipeDto>(recipe);
+            result.Id = null;
+            result.RecipeType = null;
+            foreach (var item in result.RecipeItems)
+            {
+                item.Item.Id = null;
+            }
+            return result;
+        }
+
         [HttpPost]
         public async Task Post([FromBody] RecipeDto value)
         {
