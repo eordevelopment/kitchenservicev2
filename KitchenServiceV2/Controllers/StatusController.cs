@@ -10,7 +10,7 @@ namespace KitchenServiceV2.Controllers
         public string Get()
         {
             //this._logger.LogInformation("Application running. Status returning ok");
-            return "running";
+            return "v2 running";
         }
     }
 }
