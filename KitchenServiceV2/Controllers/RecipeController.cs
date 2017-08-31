@@ -19,12 +19,18 @@ namespace KitchenServiceV2.Controllers
         private readonly IRecipeRepository _recipeRepository;
         private readonly IRecipeTypeRepository _recipeTypeRepository;
         private readonly IItemRepository _itemRepository;
+        private readonly IPlanRepository _planRepository;
 
-        public RecipeController(IRecipeRepository recipeRepository, IRecipeTypeRepository recipeTypeRepository, IItemRepository itemRepository)
+        public RecipeController(
+            IRecipeRepository recipeRepository, 
+            IRecipeTypeRepository recipeTypeRepository, 
+            IItemRepository itemRepository,
+            IPlanRepository planRepository)
         {
             this._recipeRepository = recipeRepository;
             this._recipeTypeRepository = recipeTypeRepository;
             this._itemRepository = itemRepository;
+            this._planRepository = planRepository;
         }
 
         [HttpGet]
@@ -79,6 +85,9 @@ namespace KitchenServiceV2.Controllers
                 recipeItem.Item.Quantity = item.Quantity;
                 recipeItem.Item.UnitType = item.UnitType;
             }
+
+            var plans = await this._planRepository.GetRecipePlans(recipe.Id);
+            dto.AssignedPlans = plans.Select(Mapper.Map<PlanDto>).ToList();
 
             return dto;
         }

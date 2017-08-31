@@ -24,7 +24,7 @@ namespace KitchenServiceV2.Controllers
         [HttpGet("/api/plan/upcoming/{number}")]
         public async Task<IEnumerable<PlanDto>> GetUpcomingPlans(int number)
         {
-            var startDate = DateTimeOffset.Now.Date;
+            var startDate = DateTimeOffset.UtcNow.Date;
             var endDate = startDate.AddDays(number);
 
             var openPlans = await this.PlanRepository.GetOpenOrInRange(LoggedInUserToken, startDate, endDate);
@@ -33,7 +33,7 @@ namespace KitchenServiceV2.Controllers
 
             while (planDtos.Count < number)
             {
-                if (planDtos.All(x => x.DateTime.Date != dt.Date))
+                if (planDtos.All(x => x.DateTime != dt.Date))
                 {
                     planDtos.Add(new PlanDto
                     {
@@ -43,7 +43,10 @@ namespace KitchenServiceV2.Controllers
                 }
                 dt = dt.AddDays(1);
             }
-            var validPlans = planDtos.Where(x => x.Items == null || x.Items.Any(y => !y.IsDone) || !x.Items.Any()).ToList();
+            var validPlans = planDtos
+                .Where(x => x.Items == null || x.Items.Any(y => !y.IsDone) || !x.Items.Any())
+                .OrderBy(x => x.DateTime)
+                .ToList();
 
             await this.SetRecipeNames(validPlans, openPlans);
 
@@ -111,7 +114,7 @@ namespace KitchenServiceV2.Controllers
             updatedPlan.UserToken = plan.UserToken;
             await this.UpdateStock(updatedPlan.PlanItems.Where(x => x.IsDone), plan.PlanItems);
 
-            await this.PlanRepository.Upsert(plan);
+            await this.PlanRepository.Upsert(updatedPlan);
         }
 
         [HttpDelete("{id}")]

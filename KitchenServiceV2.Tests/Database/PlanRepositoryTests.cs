@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Repository;
 using KitchenServiceV2.Db.Mongo.Schema;
+using MongoDB.Bson;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -139,6 +140,31 @@ namespace KitchenServiceV2.Tests.Database
 
                 offSet += 1;
             }
+        }
+
+        [Fact]
+        public async Task CanGetPlansByRecipe()
+        {
+            var plan = new Plan
+            {
+                DateTimeUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                IsDone = false,
+                UserToken = "UserToken",
+                PlanItems = new List<PlanItem>
+                {
+                    new PlanItem
+                    {
+                        IsDone = false,
+                        RecipeId = new ObjectId("599a98f185142b3ce0f965a0")
+                    }
+                }
+            };
+
+            await this._sut.Upsert(plan);
+
+            var result = await this._sut.GetRecipePlans(new ObjectId("599a98f185142b3ce0f965a0"));
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Count);
         }
     }
 }

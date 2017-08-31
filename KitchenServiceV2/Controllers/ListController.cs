@@ -111,10 +111,9 @@ namespace KitchenServiceV2.Controllers
             updatedList.Id = existingList.Id;
 
             var itemIds = updatedList.Items.Where(x => x.ItemId != ObjectId.Empty).Select(x => x.ItemId).ToList();
-            var itemsById = new Dictionary<ObjectId, Item>();
             if (itemIds.Any())
             {
-                itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+                var itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
 
                 foreach (var shoppingListItem in updatedList.Items)
                 {
@@ -139,11 +138,7 @@ namespace KitchenServiceV2.Controllers
 
             await this._shoppingListRepository.Upsert(updatedList);
 
-            var result = Mapper.Map<ShoppingListDto>(updatedList);
-            SetItems(result.Items, itemsById);
-            SetItems(result.OptionalItems, itemsById);
-
-            return result;
+            return await this.Get(updatedList.Id.ToString());
         }
 
         [HttpDelete("{id}")]

@@ -18,7 +18,11 @@ namespace KitchenServiceV2.Tests.Controllers
 
         public RecipeControllerTests(ITestOutputHelper output) : base(output)
         {
-            this._sut = new RecipeController(this.RecipeRepositoryMock.Object, this.RecipeTypeRepositoryMock.Object, this.ItemRepositoryMock.Object);
+            this._sut = new RecipeController(
+                this.RecipeRepositoryMock.Object, 
+                this.RecipeTypeRepositoryMock.Object, 
+                this.ItemRepositoryMock.Object,
+                this.PlanRepositoryMock.Object);
             this.SetupController(this._sut);
         }
 
@@ -175,6 +179,9 @@ namespace KitchenServiceV2.Tests.Controllers
                         UnitType = "2"
                     }
                 });
+
+            this.PlanRepositoryMock.Setup(x => x.GetRecipePlans(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new List<Plan>());
 
             var result = await this._sut.Get("599a98f185142b3ce0f965a0");
 

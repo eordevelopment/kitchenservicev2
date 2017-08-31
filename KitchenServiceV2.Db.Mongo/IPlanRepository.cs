@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo.Schema;
+using MongoDB.Bson;
 
 namespace KitchenServiceV2.Db.Mongo
 {
@@ -12,5 +13,6 @@ namespace KitchenServiceV2.Db.Mongo
 
         Task<Plan> Find(string userToken, DateTimeOffset dateTime);
         Task<List<Plan>> GetOpen(string userToken);
+        Task<List<Plan>> GetRecipePlans(ObjectId recipeId);
     }
 }

@@ -15,14 +15,14 @@ namespace KitchenServiceV2.Middleware
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserTokenPolicyRequirement requirement)
         {
-            var mvcContext = context.Resource as Microsoft.AspNetCore.Http.DefaultHttpContext;
+            var mvcContext = context.Resource as Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext;
             if (mvcContext == null)
             {
                 context.Fail();
                 return;
             }
 
-            var headers = mvcContext?.Request?.Headers;
+            var headers = mvcContext?.HttpContext?.Request?.Headers;
             if (headers == null)
             {
                 context.Fail();

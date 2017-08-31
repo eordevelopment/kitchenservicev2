@@ -22,5 +22,8 @@ namespace KitchenServiceV2.Contract
         public List<RecipeStepDto> RecipeSteps { get; set; }
         [DataMember]
         public List<RecipeItemDto> RecipeItems { get; set; }
+
+        [DataMember]
+        public List<PlanDto> AssignedPlans { get; set; }
     }
 }

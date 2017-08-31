@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo.Schema;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace KitchenServiceV2.Db.Mongo.Repository
@@ -40,6 +42,14 @@ namespace KitchenServiceV2.Db.Mongo.Repository
         {
             return this.Collection
                 .Find(p => p.UserToken == userToken && !p.IsDone)
+                .ToListAsync();
+        }
+
+        public Task<List<Plan>> GetRecipePlans(ObjectId recipeId)
+        {
+            return this.Collection
+                .Find(p => !p.IsDone && p.PlanItems.Any(x => !x.IsDone && x.RecipeId == recipeId))
+                .SortByDescending(x => x.DateTimeUnixSeconds)
                 .ToListAsync();
         }
     }
