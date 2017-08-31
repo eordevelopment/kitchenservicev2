@@ -13,7 +13,6 @@ using MongoDB.Bson;
 namespace KitchenServiceV2.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Policy = "HasToken")]
     public class RecipeController : BaseController
     {
         private readonly IRecipeRepository _recipeRepository;
@@ -33,6 +32,7 @@ namespace KitchenServiceV2.Controllers
             this._planRepository = planRepository;
         }
 
+        [Authorize(Policy = "HasToken")]
         [HttpGet]
         public async Task<List<RecipeDto>> Get()
         {
@@ -54,6 +54,7 @@ namespace KitchenServiceV2.Controllers
             return result;
         }
 
+        [Authorize(Policy = "HasToken")]
         [HttpGet("{id}")]
         public async Task<RecipeDto> Get(string id)
         {
@@ -112,6 +113,7 @@ namespace KitchenServiceV2.Controllers
             return result;
         }
 
+        [Authorize(Policy = "HasToken")]
         [HttpPost]
         public async Task Post([FromBody] RecipeDto value)
         {
@@ -136,6 +138,7 @@ namespace KitchenServiceV2.Controllers
             await this._recipeRepository.Upsert(recipe);
         }
 
+        [Authorize(Policy = "HasToken")]
         [HttpPut("{id}")]
         public async Task Put(string id, [FromBody] RecipeDto value)
         {
@@ -168,6 +171,7 @@ namespace KitchenServiceV2.Controllers
             await this._recipeRepository.Upsert(recipe);
         }
 
+        [Authorize(Policy = "HasToken")]
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {
