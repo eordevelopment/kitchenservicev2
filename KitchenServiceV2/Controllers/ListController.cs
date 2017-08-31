@@ -94,7 +94,7 @@ namespace KitchenServiceV2.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ShoppingListDto> Put(int id, [FromBody] ShoppingListDto value)
+        public async Task<ShoppingListDto> Put(string id, [FromBody] ShoppingListDto value)
         {
             var objectId = Mapper.Map<ObjectId>(id);
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
@@ -110,10 +110,11 @@ namespace KitchenServiceV2.Controllers
             updatedList.UserToken = LoggedInUserToken;
             updatedList.Id = existingList.Id;
 
-            var itemIds = updatedList.Items.Select(x => x.ItemId).ToList();
+            var itemIds = updatedList.Items.Where(x => x.ItemId != ObjectId.Empty).Select(x => x.ItemId).ToList();
+            var itemsById = new Dictionary<ObjectId, Item>();
             if (itemIds.Any())
             {
-                var itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+                itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
 
                 foreach (var shoppingListItem in updatedList.Items)
                 {
@@ -123,13 +124,13 @@ namespace KitchenServiceV2.Controllers
                     var existingItem = existingItemsById.ContainsKey(shoppingListItem.ItemId) ? existingItemsById[shoppingListItem.ItemId] : null;
                     if (shoppingListItem.IsDone && (existingItem == null || !existingItem.IsDone))
                     {
-                        // decrement stock
-                        item.Quantity -= shoppingListItem.Amount;
+                        // increment stock
+                        item.Quantity += shoppingListItem.Amount;
                     }
                     else if (!shoppingListItem.IsDone && existingItem != null && existingItem.IsDone)
                     {
-                        //increment stock
-                        item.Quantity += shoppingListItem.Amount;
+                        //decrement stock
+                        item.Quantity -= shoppingListItem.Amount;
                     }
                 }
 
@@ -138,7 +139,11 @@ namespace KitchenServiceV2.Controllers
 
             await this._shoppingListRepository.Upsert(updatedList);
 
-            return value;
+            var result = Mapper.Map<ShoppingListDto>(updatedList);
+            SetItems(result.Items, itemsById);
+            SetItems(result.OptionalItems, itemsById);
+
+            return result;
         }
 
         [HttpDelete("{id}")]
@@ -175,6 +180,17 @@ namespace KitchenServiceV2.Controllers
             {
                 if (!itemsById.ContainsKey(itemDto.Item.Id)) continue;
                 itemDto.Item = Mapper.Map<ItemDto>(itemsById[itemDto.Item.Id]);
+            }
+        }
+
+        [NonAction]
+        private static void SetItems(IEnumerable<ShoppingListItemDto> items, IReadOnlyDictionary<ObjectId, Item> itemsById)
+        {
+            foreach (var itemDto in items)
+            {
+                var id = Mapper.Map<ObjectId>(itemDto.Item.Id);
+                if (!itemsById.ContainsKey(id)) continue;
+                itemDto.Item = Mapper.Map<ItemDto>(itemsById[id]);
             }
         }
     }

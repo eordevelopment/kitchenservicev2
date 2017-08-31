@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using KitchenServiceV2.Contract;
 using KitchenServiceV2.Controllers;
 using KitchenServiceV2.Db.Mongo.Schema;
 using MongoDB.Bson;
@@ -181,6 +182,253 @@ namespace KitchenServiceV2.Tests.Controllers
             await this._sut.Delete("599a98f185142b3ce0f9659c");
 
             this.ShoppingListRepositoryMock.Verify(x => x.Remove(It.Is<ObjectId>(y => y.ToString() == "599a98f185142b3ce0f9659c")), Times.Once);
+        }
+
+        [Fact]
+        public async Task PutCorrectlyMaps()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var dto = new ShoppingListDto
+            {
+                Name = "test list",
+                Id = "599a98f185142b3ce0f965a0",
+                CreatedOn = now,
+                IsDone = false,
+                Items = new List<ShoppingListItemDto>
+                {
+                    new ShoppingListItemDto
+                    {
+                        IsDone = true,
+                        Amount = 2,
+                        TotalAmount = 4,
+                        Item = new ItemDto()
+                    }
+                },
+                OptionalItems = new List<ShoppingListItemDto>
+                {
+                    new ShoppingListItemDto
+                    {
+                        IsDone = false,
+                        Amount = 10,
+                        TotalAmount = 10,
+                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96598" }
+                    }
+                }
+            };
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new ShoppingList
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "UserToken",
+                    Items = new List<ShoppingListItem>()
+                });
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>()))
+                .Returns(Task.CompletedTask);
+
+            var result = await this._sut.Put("599a98f185142b3ce0f965a0", dto);
+
+            Assert.NotNull(result);
+
+            this.ShoppingListRepositoryMock.Verify(x => x.Upsert(It.Is<ShoppingList>(l =>
+                l.IsDone &&
+                l.Name == "test list" &&
+                l.Id.ToString() == "599a98f185142b3ce0f965a0" &&
+                l.UserToken == "UserToken" &&
+                l.CreatedOnUnixSeconds == now.ToUnixTimeSeconds() &&
+                l.Items.Count == 1 && l.OptionalItems.Count == 1 &&
+                l.Items.Any(i =>
+                    i.IsDone &&
+                    i.Amount == 2 &&
+                    i.TotalAmount == 4
+                ) &&
+                l.OptionalItems.Any(i =>
+                    !i.IsDone &&
+                    i.Amount == 10 &&
+                    i.TotalAmount == 10 &&
+                    i.ItemId.ToString() == "599a98f185142b3ce0f96598"
+                )
+            )), Times.Once);
+        }
+
+        [Fact]
+        public async Task PutShouldIncrementStock()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var dto = new ShoppingListDto
+            {
+                Name = "test list",
+                Id = "599a98f185142b3ce0f965a0",
+                CreatedOn = now,
+                IsDone = false,
+                Items = new List<ShoppingListItemDto>
+                {
+                    new ShoppingListItemDto
+                    {
+                        IsDone = true,
+                        Amount = 2,
+                        TotalAmount = 4,
+                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96598" }
+                    }
+                }
+            };
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new ShoppingList
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "UserToken",
+                    Items = new List<ShoppingListItem>()
+                });
+
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 10,
+                        UserToken = "UserToken"
+                    }
+                });
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>()))
+                .Returns(Task.CompletedTask);
+
+            this.ItemRepositoryMock.Setup(x => x.Upsert(It.IsAny<IReadOnlyCollection<Item>>()))
+                .Returns(Task.CompletedTask);
+
+            var result = await this._sut.Put("599a98f185142b3ce0f965a0", dto);
+
+            Assert.NotNull(result);
+
+            this.ItemRepositoryMock.Verify(x => x.Upsert(It.Is<IReadOnlyCollection<Item>>(i => 
+                i.Count == 1 &&
+                i.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f96598" && itm.Quantity == 12)
+            )), Times.Once);
+        }
+
+        [Fact]
+        public async Task PutShouldDecrementStock()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var dto = new ShoppingListDto
+            {
+                Name = "test list",
+                Id = "599a98f185142b3ce0f965a0",
+                CreatedOn = now,
+                IsDone = false,
+                Items = new List<ShoppingListItemDto>
+                {
+                    new ShoppingListItemDto
+                    {
+                        IsDone = false,
+                        Amount = 2,
+                        TotalAmount = 4,
+                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96598" }
+                    }
+                }
+            };
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new ShoppingList
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "UserToken",
+                    Items = new List<ShoppingListItem>
+                    {
+                        new ShoppingListItem
+                        {
+                            IsDone = true,
+                            ItemId = new ObjectId("599a98f185142b3ce0f96598"),
+                            Amount = 2,
+                            TotalAmount = 4
+                        }
+                    }
+                });
+
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 10,
+                        UserToken = "UserToken"
+                    }
+                });
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>()))
+                .Returns(Task.CompletedTask);
+
+            this.ItemRepositoryMock.Setup(x => x.Upsert(It.IsAny<IReadOnlyCollection<Item>>()))
+                .Returns(Task.CompletedTask);
+
+            var result = await this._sut.Put("599a98f185142b3ce0f965a0", dto);
+
+            Assert.NotNull(result);
+
+            this.ItemRepositoryMock.Verify(x => x.Upsert(It.Is<IReadOnlyCollection<Item>>(i =>
+                i.Count == 1 &&
+                i.Any(itm => itm.Id.ToString() == "599a98f185142b3ce0f96598" && itm.Quantity == 8)
+            )), Times.Once);
+        }
+
+        [Fact]
+        public async Task PutShouldReturnUpdatedStock()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var dto = new ShoppingListDto
+            {
+                Name = "test list",
+                Id = "599a98f185142b3ce0f965a0",
+                CreatedOn = now,
+                IsDone = false,
+                Items = new List<ShoppingListItemDto>
+                {
+                    new ShoppingListItemDto
+                    {
+                        IsDone = true,
+                        Amount = 2,
+                        TotalAmount = 4,
+                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96598" }
+                    }
+                }
+            };
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new ShoppingList
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "UserToken",
+                    Items = new List<ShoppingListItem>()
+                });
+
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 10,
+                        UserToken = "UserToken"
+                    }
+                });
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>()))
+                .Returns(Task.CompletedTask);
+
+            this.ItemRepositoryMock.Setup(x => x.Upsert(It.IsAny<IReadOnlyCollection<Item>>()))
+                .Returns(Task.CompletedTask);
+
+            var result = await this._sut.Put("599a98f185142b3ce0f965a0", dto);
+
+            Assert.NotNull(result);
+            Assert.Equal(12, result.Items.First().Item.Quantity);
         }
     }
 }
