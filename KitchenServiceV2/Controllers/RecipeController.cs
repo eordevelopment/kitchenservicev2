@@ -104,12 +104,24 @@ namespace KitchenServiceV2.Controllers
             if(recipe == null) throw new ArgumentException($"No resource with id: {id}");
 
             var result = Mapper.Map<RecipeDto>(recipe);
+
+            var itemIds = recipe.RecipeItems.Select(x => x.ItemId).Distinct().ToList();
+            var itemsById = (await this._itemRepository.Get(itemIds)).ToDictionary(x => x.Id.ToString());
+
+            foreach (var recipeItem in result.RecipeItems)
+            {
+                var item = itemsById.ContainsKey(recipeItem.Item.Id) ? itemsById[recipeItem.Item.Id] : null;
+                if (item == null) continue;
+
+                recipeItem.Item.Name = item.Name;
+                recipeItem.Item.Quantity = item.Quantity;
+                recipeItem.Item.UnitType = item.UnitType;
+                recipeItem.Item.Id = null;
+            }
+
             result.Id = null;
             result.RecipeType = null;
-            foreach (var item in result.RecipeItems)
-            {
-                item.Item.Id = null;
-            }
+
             return result;
         }
 

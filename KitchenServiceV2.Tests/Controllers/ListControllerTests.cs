@@ -227,9 +227,25 @@ namespace KitchenServiceV2.Tests.Controllers
             this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>()))
                 .Returns(Task.CompletedTask);
 
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 10,
+                        UserToken = "UserToken"
+                    }
+                });
+            this.ItemRepositoryMock.Setup(x => x.Upsert(It.IsAny<IReadOnlyCollection<Item>>()))
+                .Returns(Task.CompletedTask);
+
             var result = await this._sut.Put("599a98f185142b3ce0f965a0", dto);
 
             Assert.NotNull(result);
+            Assert.Equal(1, result.OptionalItems.Count);
+            Assert.NotNull(result.OptionalItems.FirstOrDefault(x => x.Item.Name == "item 1"));
 
             this.ShoppingListRepositoryMock.Verify(x => x.Upsert(It.Is<ShoppingList>(l =>
                 l.IsDone &&

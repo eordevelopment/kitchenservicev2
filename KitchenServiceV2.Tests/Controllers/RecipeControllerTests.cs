@@ -455,5 +455,101 @@ namespace KitchenServiceV2.Tests.Controllers
                     r.RecipeItems.Any(i => i.Amount == 4 && i.Instructions == "chopped")
                 )), Times.Once);
         }
+
+        [Fact]
+        public async Task ViewShouldNotReturnIds()
+        {
+            this.RecipeRepositoryMock.Setup(x => x.Find(It.IsAny<string>()))
+                .ReturnsAsync(new Recipe
+                {
+                    Name = "recipe1",
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "UserToken",
+                    RecipeTypeId = new ObjectId("599a98f185142b3ce0f96598"),
+                    Key = "RecipeKey",
+                    RecipeSteps = new List<RecipeStep>
+                    {
+                        new RecipeStep { StepNumber = 1, Description = "Step 1." },
+                        new RecipeStep { StepNumber = 2, Description = "Step 2." }
+                    },
+                    RecipeItems = new List<RecipeItem>
+                    {
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f96599"),
+                            Instructions = "diced",
+                            Amount = 10
+                        },
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f9659b"),
+                            Instructions = "chopped",
+                            Amount = 20
+                        }
+                    }
+                });
+
+            this.RecipeTypeRepositoryMock.Setup(x => x.Get(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new RecipeType
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f96598"),
+                    Name = "recipe type",
+                    UserToken = "UserToken"
+                });
+
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96599"),
+                        Name = "item 1",
+                        Quantity = 1,
+                        UnitType = "1"
+                    },
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f9659b"),
+                        Name = "item 2",
+                        Quantity = 2,
+                        UnitType = "2"
+                    }
+                });
+
+            this.PlanRepositoryMock.Setup(x => x.GetRecipePlans(It.IsAny<ObjectId>()))
+                .ReturnsAsync(new List<Plan>());
+
+            var result = await this._sut.ViewRecipe("599a98f185142b3ce0f965a0");
+
+            Assert.NotNull(result);
+            Assert.Equal("recipe1", result.Name);
+            Assert.Null(result.Id);
+            Assert.Equal("RecipeKey", result.Key);
+            Assert.Null(result.RecipeType);
+
+            Assert.Equal(2, result.RecipeSteps.Count);
+
+            Assert.Equal("Step 1.", result.RecipeSteps[0].Description);
+            Assert.Equal(1, result.RecipeSteps[0].StepNumber);
+
+            Assert.Equal("Step 2.", result.RecipeSteps[1].Description);
+            Assert.Equal(2, result.RecipeSteps[1].StepNumber);
+
+            Assert.Equal(2, result.RecipeItems.Count);
+
+            Assert.Equal("item 1", result.RecipeItems[0].Item.Name);
+            Assert.Equal(1, result.RecipeItems[0].Item.Quantity);
+            Assert.Equal("1", result.RecipeItems[0].Item.UnitType);
+            Assert.Equal(10, result.RecipeItems[0].Amount);
+            Assert.Equal("diced", result.RecipeItems[0].Instructions);
+            Assert.Null(result.RecipeItems[0].Item.Id);
+
+            Assert.Equal("item 2", result.RecipeItems[1].Item.Name);
+            Assert.Equal(2, result.RecipeItems[1].Item.Quantity);
+            Assert.Equal("2", result.RecipeItems[1].Item.UnitType);
+            Assert.Equal(20, result.RecipeItems[1].Amount);
+            Assert.Equal("chopped", result.RecipeItems[1].Instructions);
+            Assert.Null(result.RecipeItems[1].Item.Id);
+        }
     }
 }

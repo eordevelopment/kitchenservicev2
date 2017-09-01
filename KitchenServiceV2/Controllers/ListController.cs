@@ -110,14 +110,20 @@ namespace KitchenServiceV2.Controllers
             updatedList.UserToken = LoggedInUserToken;
             updatedList.Id = existingList.Id;
 
-            var itemIds = updatedList.Items.Where(x => x.ItemId != ObjectId.Empty).Select(x => x.ItemId).ToList();
+            var itemIds = updatedList.Items
+                .Where(x => x.ItemId != ObjectId.Empty)
+                .Select(x => x.ItemId)
+                .Concat(updatedList.OptionalItems.Where(x => x.ItemId != ObjectId.Empty).Select(x => x.ItemId))
+                .ToList();
+
+            var itemsById = new Dictionary<ObjectId, Item>();
             if (itemIds.Any())
             {
-                var itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
+                itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id);
 
                 foreach (var shoppingListItem in updatedList.Items)
                 {
-                    if(!itemsById.ContainsKey(shoppingListItem.ItemId)) continue;
+                    if (!itemsById.ContainsKey(shoppingListItem.ItemId)) continue;
                     var item = itemsById[shoppingListItem.ItemId];
 
                     var existingItem = existingItemsById.ContainsKey(shoppingListItem.ItemId) ? existingItemsById[shoppingListItem.ItemId] : null;
@@ -138,7 +144,11 @@ namespace KitchenServiceV2.Controllers
 
             await this._shoppingListRepository.Upsert(updatedList);
 
-            return await this.Get(updatedList.Id.ToString());
+            var result = Mapper.Map<ShoppingListDto>(updatedList);
+            SetItems(result.Items, itemsById);
+            SetItems(result.OptionalItems, itemsById);
+
+            return result;
         }
 
         [HttpDelete("{id}")]
