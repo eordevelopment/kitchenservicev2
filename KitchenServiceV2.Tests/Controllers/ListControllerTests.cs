@@ -446,5 +446,177 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.NotNull(result);
             Assert.Equal(12, result.Items.First().Item.Quantity);
         }
+
+        [Fact]
+        public async Task GenerateShouldPreserveDuplicateRecipeFromMultiplePlans()
+        {
+            this.ShoppingListRepositoryMock.Setup(x => x.GetOpen(It.IsAny<string>()))
+                .ReturnsAsync((ShoppingList)null);
+
+            this.PlanRepositoryMock.Setup(x => x.GetOpen(It.IsAny<string>()))
+                .ReturnsAsync(new List<Plan>
+                {
+                    new Plan
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                        UserToken = "UserToken",
+                        IsDone = false,
+                        DateTimeUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                        PlanItems = new List<PlanItem>
+                        {
+                            new PlanItem
+                            {
+                                IsDone = false,
+                                RecipeId = new ObjectId("599a98f185142b3ce0f96598")
+                            }
+                        }
+                    },
+                    new Plan
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f9659e"),
+                        UserToken = "UserToken",
+                        IsDone = false,
+                        DateTimeUnixSeconds = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds(),
+                        PlanItems = new List<PlanItem>
+                        {
+                            new PlanItem
+                            {
+                                IsDone = false,
+                                RecipeId = new ObjectId("599a98f185142b3ce0f96598")
+                            }
+                        }
+                    }
+                });
+
+            this.RecipeRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Recipe>
+                {
+                    new Recipe
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        UserToken = "UserToken",
+                        Name = "recipe",
+                        Key = "key",
+                        RecipeItems = new List<RecipeItem>
+                        {
+                            new RecipeItem
+                            {
+                                ItemId = new ObjectId("599a98f185142b3ce0f96599"),
+                                Amount = 1
+                            }
+                        }
+                    }
+                });
+
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96599"),
+                        UserToken = "UserToken",
+                        Name = "item",
+                        Quantity = 2,
+                        UnitType = "ml"
+                    }
+                });
+
+            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()))
+                .Returns(new ShoppingList());
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>())).Returns(Task.CompletedTask);
+
+            await this._sut.GenerateList();
+
+            this._shoppingListModelMock
+                .Verify(x => x.CreateShoppingList(
+                        It.IsAny<string>(),
+                        It.Is<IEnumerable<Recipe>>(col =>
+                            col.Count(r => r.Id.ToString() == "599a98f185142b3ce0f96598") == 2
+                        ),
+                        It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task GenerateShouldPreserveDuplicateRecipeFromPlan()
+        {
+            this.ShoppingListRepositoryMock.Setup(x => x.GetOpen(It.IsAny<string>()))
+                .ReturnsAsync((ShoppingList)null);
+
+            this.PlanRepositoryMock.Setup(x => x.GetOpen(It.IsAny<string>()))
+                .ReturnsAsync(new List<Plan>
+                {
+                    new Plan
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                        UserToken = "UserToken",
+                        IsDone = false,
+                        DateTimeUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                        PlanItems = new List<PlanItem>
+                        {
+                            new PlanItem
+                            {
+                                IsDone = false,
+                                RecipeId = new ObjectId("599a98f185142b3ce0f96598")
+                            },
+                            new PlanItem
+                            {
+                                IsDone = false,
+                                RecipeId = new ObjectId("599a98f185142b3ce0f96598")
+                            }
+                        }
+                    }
+                });
+
+            this.RecipeRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Recipe>
+                {
+                    new Recipe
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        UserToken = "UserToken",
+                        Name = "recipe",
+                        Key = "key",
+                        RecipeItems = new List<RecipeItem>
+                        {
+                            new RecipeItem
+                            {
+                                ItemId = new ObjectId("599a98f185142b3ce0f96599"),
+                                Amount = 1
+                            }
+                        }
+                    }
+                });
+
+            this.ItemRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Item>
+                {
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96599"),
+                        UserToken = "UserToken",
+                        Name = "item",
+                        Quantity = 2,
+                        UnitType = "ml"
+                    }
+                });
+
+            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()))
+                .Returns(new ShoppingList());
+
+            this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>())).Returns(Task.CompletedTask);
+
+            await this._sut.GenerateList();
+
+            this._shoppingListModelMock
+                .Verify(x => x.CreateShoppingList(
+                    It.IsAny<string>(), 
+                    It.Is<IEnumerable<Recipe>>(col =>
+                        col.Count(r => r.Id.ToString() == "599a98f185142b3ce0f96598") == 2
+                    ), 
+                    It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()), 
+                    Times.Once);
+        }
     }
 }

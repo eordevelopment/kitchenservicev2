@@ -138,6 +138,69 @@ namespace KitchenServiceV2.Tests
         }
 
         [Fact]
+        public void CreateShoppingListMultipleRecipesShouldAddMultiple()
+        {
+            var recipes = new List<Recipe>
+            {
+                new Recipe
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    Name = "test recipe 1",
+                    UserToken = UserToken,
+                    Key = "recipeKey",
+                    RecipeItems = new List<RecipeItem>
+                    {
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f96598"),
+                            Amount = 4
+                        }
+                    }
+                },
+                new Recipe
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    Name = "test recipe 1",
+                    UserToken = UserToken,
+                    Key = "recipeKey",
+                    RecipeItems = new List<RecipeItem>
+                    {
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f96598"),
+                            Amount = 4
+                        }
+                    }
+                }
+            };
+
+            var itemsById = new Dictionary<ObjectId, Item>
+            {
+                {
+                    new ObjectId("599a98f185142b3ce0f96598"),
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 1
+                    }
+                }
+            };
+
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById);
+
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Items.Count);
+            Assert.False(result.OptionalItems.Any());
+
+            Assert.True(result.Items.Any(itm =>
+                itm.IsDone == false &&
+                itm.ItemId.ToString() == "599a98f185142b3ce0f96598" &&
+                itm.Amount == 7 && itm.TotalAmount == 8
+            ));
+        }
+
+        [Fact]
         public void CreateShoppingListSingleRecipeAddsOptionalItemsToList()
         {
             var recipes = new List<Recipe>

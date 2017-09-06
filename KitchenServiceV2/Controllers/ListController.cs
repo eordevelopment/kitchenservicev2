@@ -80,7 +80,12 @@ namespace KitchenServiceV2.Controllers
             var itemsById = (await this.GetRecipeItems(recipes)).ToDictionary(x => x.Id);
             if (!itemsById.Any()) return string.Empty;
 
-            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, recipes, itemsById);
+            var recipesById = recipes.ToDictionary(x => x.Id);
+            var planRecipes = plans
+                .SelectMany(x => x.PlanItems)
+                .Select(x => recipesById.ContainsKey(x.RecipeId) ? recipesById[x.RecipeId] : null);
+
+            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, planRecipes.Where(x => x != null), itemsById);
 
             await this._shoppingListRepository.Upsert(shoppingList);
             return shoppingList.Id.ToString();
