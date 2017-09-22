@@ -6,6 +6,7 @@ using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Schema;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -32,7 +33,7 @@ namespace KitchenServiceV2.Controllers
             this._planRepository = planRepository;
         }
 
-        [Authorize(Policy = "HasToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
         public async Task<List<RecipeDto>> Get()
         {
@@ -54,7 +55,7 @@ namespace KitchenServiceV2.Controllers
             return result;
         }
 
-        [Authorize(Policy = "HasToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{id}")]
         public async Task<RecipeDto> Get(string id)
         {
@@ -125,7 +126,7 @@ namespace KitchenServiceV2.Controllers
             return result;
         }
 
-        [Authorize(Policy = "HasToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost]
         public async Task Post([FromBody] RecipeDto value)
         {
@@ -150,7 +151,7 @@ namespace KitchenServiceV2.Controllers
             await this._recipeRepository.Upsert(recipe);
         }
 
-        [Authorize(Policy = "HasToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id}")]
         public async Task Put(string id, [FromBody] RecipeDto value)
         {
@@ -183,7 +184,7 @@ namespace KitchenServiceV2.Controllers
             await this._recipeRepository.Upsert(recipe);
         }
 
-        [Authorize(Policy = "HasToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpDelete("{id}")]
         public async Task Delete(string id)
         {

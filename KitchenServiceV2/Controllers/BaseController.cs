@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,13 +13,10 @@ namespace KitchenServiceV2.Controllers
             {
                 if (this._userToken != null) return this._userToken;
 
-                var token = Request.Headers["Authorization"];
-                var rawVal = token.FirstOrDefault();
-                var tokenVal = rawVal?.Replace("Basic ", "");
+                var claims = User?.Claims;
+                var userId = claims?.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti)?.Value;
 
-                if(string.IsNullOrWhiteSpace(tokenVal)) throw new UnauthorizedAccessException();
-
-                this._userToken = tokenVal;
+                this._userToken = userId;
                 return this._userToken;
             }
         }

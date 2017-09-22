@@ -6,6 +6,7 @@ using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Schema;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -13,7 +14,7 @@ using MongoDB.Bson;
 namespace KitchenServiceV2.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Policy = "HasToken")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PlanController : BaseInventoryController
     {
         public PlanController(IPlanRepository planRepository, IItemRepository itemRepository, IRecipeRepository recipeRepository)

@@ -4,13 +4,14 @@ using System.Threading.Tasks;
 using AutoMapper;
 using KitchenServiceV2.Contract;
 using KitchenServiceV2.Db.Mongo;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KitchenServiceV2.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Policy = "HasToken")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ItemsController : BaseController
     {
         private readonly IItemRepository _itemRepository;
