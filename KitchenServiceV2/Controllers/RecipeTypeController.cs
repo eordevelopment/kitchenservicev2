@@ -13,8 +13,8 @@ using MongoDB.Bson;
 
 namespace KitchenServiceV2.Controllers
 {
+    [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Policy = "HasToken")]
     public class RecipeTypeController : BaseController
     {
         private readonly IRecipeTypeRepository _recipeTypeRepository;
