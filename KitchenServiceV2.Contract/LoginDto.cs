@@ -3,7 +3,7 @@
 namespace KitchenServiceV2.Contract
 {
     [DataContract]
-    public class AccountDto
+    public class LoginDto
     {
         [DataMember]
         public string IdToken { get; set; }

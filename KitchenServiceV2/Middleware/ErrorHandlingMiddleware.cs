@@ -34,7 +34,7 @@ namespace KitchenServiceV2.Middleware
             else if (exception is UnauthorizedAccessException || exception.Message.Contains("No authentication")) code = 401;
             else if (exception is InvalidOperationException) code = 400;
 
-            var result = JsonConvert.SerializeObject(new { error = exception.Message });
+            var result = JsonConvert.SerializeObject(exception.Message);
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = code;
             return context.Response.WriteAsync(result);

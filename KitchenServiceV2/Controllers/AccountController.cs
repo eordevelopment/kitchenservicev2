@@ -28,7 +28,7 @@ namespace KitchenServiceV2.Controllers
         }
 
         [HttpPost("/api/account/login")]
-        public async Task<IActionResult> Login([FromBody] AccountDto value)
+        public async Task<AuthResponseDto> Login([FromBody] LoginDto value)
         {
             if (string.IsNullOrWhiteSpace(value.IdToken))
             {
@@ -37,10 +37,8 @@ namespace KitchenServiceV2.Controllers
 
             var respose = await this._httpClient.GetAsync(string.Format("https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={0}", value.IdToken));
 
-            Console.WriteLine(respose.StatusCode);
             if ((int) respose.StatusCode != 200)
-                throw new InvalidOperationException($"Code: {respose.StatusCode}");
-
+                throw new InvalidOperationException("Unable to verify google account token");
             var serialized = await respose.Content.ReadAsStringAsync();
 
             var user = JsonConvert.DeserializeObject<User>(serialized);
@@ -66,10 +64,14 @@ namespace KitchenServiceV2.Controllers
             var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                 _config["Tokens:Issuer"],
                 claims,
-                expires: DateTime.Now.AddMinutes(1),
+                expires: DateTime.Now.AddDays(1),
                 signingCredentials: creds);
 
-            return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+            return new AuthResponseDto
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                TokenType = "bearer"
+            };
         }
     }
 }

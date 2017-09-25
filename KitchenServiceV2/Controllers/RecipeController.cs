@@ -128,7 +128,7 @@ namespace KitchenServiceV2.Controllers
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost]
-        public async Task Post([FromBody] RecipeDto value)
+        public async Task<string> Post([FromBody] RecipeDto value)
         {
             ValidateRecipe(value);
 
@@ -149,11 +149,12 @@ namespace KitchenServiceV2.Controllers
             }
 
             await this._recipeRepository.Upsert(recipe);
+            return recipe.Id.ToString();
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id}")]
-        public async Task Put(string id, [FromBody] RecipeDto value)
+        public async Task<string> Put(string id, [FromBody] RecipeDto value)
         {
             ValidateRecipe(value);
 
@@ -182,6 +183,7 @@ namespace KitchenServiceV2.Controllers
             }
 
             await this._recipeRepository.Upsert(recipe);
+            return id;
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

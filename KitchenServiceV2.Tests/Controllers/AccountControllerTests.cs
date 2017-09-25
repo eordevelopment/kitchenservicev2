@@ -31,7 +31,7 @@ namespace KitchenServiceV2.Tests.Controllers
         [Fact]
         public async Task LoginInvalidParamShouldThrow()
         {
-            var postData = new AccountDto();
+            var postData = new LoginDto();
             var exceptionAsync = Record.ExceptionAsync(() => this._sut.Login(postData));
             if (exceptionAsync != null)
             {
@@ -47,7 +47,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this._httpMock.Setup(x => x.GetAsync(It.IsAny<string>()))
                 .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.BadRequest));
 
-            var postData = new AccountDto
+            var postData = new LoginDto
             {
                 IdToken = "SomeToken"
             };
@@ -56,7 +56,7 @@ namespace KitchenServiceV2.Tests.Controllers
             {
                 var exception = await exceptionAsync;
                 Assert.IsType(typeof(InvalidOperationException), exception);
-                Assert.Equal("Code: BadRequest", exception.Message);
+                Assert.Equal("Unable to verify google account token", exception.Message);
             }
         }
 
@@ -79,18 +79,15 @@ namespace KitchenServiceV2.Tests.Controllers
             this.UserRepositoryMock.Setup(x => x.FindByGoogleId(It.IsAny<string>())).ReturnsAsync((User)null);
             this.UserRepositoryMock.Setup(x => x.Upsert(It.IsAny<User>())).Returns(Task.CompletedTask);
 
-            var postData = new AccountDto
+            var postData = new LoginDto
             {
                 IdToken = "SomeToken"
             };
 
             var result = await this._sut.Login(postData);
             Assert.NotNull(result);
-
-            var httpResponse = result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-            Assert.NotNull(httpResponse);
-            Assert.Equal(200, httpResponse.StatusCode);
-            Assert.NotNull(httpResponse.Value);
+            Assert.NotNull(result.Token);
+            Assert.NotNull(result.TokenType);
 
             this.UserRepositoryMock.Verify(x => x.Upsert(It.Is<User>( u=> 
                 u.Email == user.Email &&
@@ -125,18 +122,15 @@ namespace KitchenServiceV2.Tests.Controllers
                 Sub = user.Sub
             });
 
-            var postData = new AccountDto
+            var postData = new LoginDto
             {
                 IdToken = "SomeToken"
             };
 
             var result = await this._sut.Login(postData);
             Assert.NotNull(result);
-
-            var httpResponse = result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-            Assert.NotNull(httpResponse);
-            Assert.Equal(200, httpResponse.StatusCode);
-            Assert.NotNull(httpResponse.Value);
+            Assert.NotNull(result.Token);
+            Assert.NotNull(result.TokenType);
         }
     }
 }
