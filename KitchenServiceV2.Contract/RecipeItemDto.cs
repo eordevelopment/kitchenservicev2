@@ -13,5 +13,8 @@ namespace KitchenServiceV2.Contract
 
         [DataMember]
         public ItemDto Item { get; set; }
+
+        [DataMember]
+        public bool FlaggedForNextShop { get; set; }
     }
 }

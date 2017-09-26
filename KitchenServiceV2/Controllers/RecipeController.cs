@@ -19,18 +19,21 @@ namespace KitchenServiceV2.Controllers
         private readonly IRecipeRepository _recipeRepository;
         private readonly IRecipeTypeRepository _recipeTypeRepository;
         private readonly IItemRepository _itemRepository;
+        private readonly IItemToBuyRepository _itemToBuyRepository;
         private readonly IPlanRepository _planRepository;
 
         public RecipeController(
             IRecipeRepository recipeRepository, 
             IRecipeTypeRepository recipeTypeRepository, 
             IItemRepository itemRepository,
+            IItemToBuyRepository itemToBuyRepository,
             IPlanRepository planRepository)
         {
             this._recipeRepository = recipeRepository;
             this._recipeTypeRepository = recipeTypeRepository;
             this._itemRepository = itemRepository;
             this._planRepository = planRepository;
+            this._itemToBuyRepository = itemToBuyRepository;
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -77,6 +80,7 @@ namespace KitchenServiceV2.Controllers
 
             var itemIds = recipe.RecipeItems.Select(x => x.ItemId).Distinct().ToList();
             var itemsById = (await this._itemRepository.Get(itemIds)).ToDictionary(x => x.Id.ToString());
+            var recipeItemsToBuyByItemId = (await this._itemToBuyRepository.FindByItemIds(LoggedInUserToken, itemIds)).ToDictionary(x => x.ItemId.ToString());
 
             foreach (var recipeItem in dto.RecipeItems)
             {
@@ -86,7 +90,10 @@ namespace KitchenServiceV2.Controllers
                 recipeItem.Item.Name = item.Name;
                 recipeItem.Item.Quantity = item.Quantity;
                 recipeItem.Item.UnitType = item.UnitType;
+
+                recipeItem.FlaggedForNextShop = recipeItemsToBuyByItemId.ContainsKey(recipeItem.Item.Id);
             }
+
 
             var plans = await this._planRepository.GetRecipePlans(recipe.Id);
             dto.AssignedPlans = plans.Select(Mapper.Map<PlanDto>).ToList();

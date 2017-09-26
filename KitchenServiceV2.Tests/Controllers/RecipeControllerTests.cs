@@ -22,6 +22,7 @@ namespace KitchenServiceV2.Tests.Controllers
                 this.RecipeRepositoryMock.Object, 
                 this.RecipeTypeRepositoryMock.Object, 
                 this.ItemRepositoryMock.Object,
+                this.ItemToBuyRepositoryMock.Object,
                 this.PlanRepositoryMock.Object);
             this.SetupController(this._sut);
         }
@@ -180,6 +181,15 @@ namespace KitchenServiceV2.Tests.Controllers
                     }
                 });
 
+            this.ItemToBuyRepositoryMock.Setup(x => x.FindByItemIds(It.IsAny<String>(), It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<ItemToBuy>
+                {
+                    new ItemToBuy
+                    {
+                        ItemId = new ObjectId("599a98f185142b3ce0f96599")
+                    }
+                });
+
             this.PlanRepositoryMock.Setup(x => x.GetRecipePlans(It.IsAny<ObjectId>()))
                 .ReturnsAsync(new List<Plan>());
 
@@ -204,6 +214,7 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.Equal(2, result.RecipeItems.Count);
 
             Assert.Equal("item 1", result.RecipeItems[0].Item.Name);
+            Assert.True(result.RecipeItems[0].FlaggedForNextShop);
             Assert.Equal(1, result.RecipeItems[0].Item.Quantity);
             Assert.Equal("1", result.RecipeItems[0].Item.UnitType);
             Assert.Equal(10, result.RecipeItems[0].Amount);
@@ -211,6 +222,7 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.Equal("599a98f185142b3ce0f96599", result.RecipeItems[0].Item.Id);
 
             Assert.Equal("item 2", result.RecipeItems[1].Item.Name);
+            Assert.False(result.RecipeItems[1].FlaggedForNextShop);
             Assert.Equal(2, result.RecipeItems[1].Item.Quantity);
             Assert.Equal("2", result.RecipeItems[1].Item.UnitType);
             Assert.Equal(20, result.RecipeItems[1].Amount);
