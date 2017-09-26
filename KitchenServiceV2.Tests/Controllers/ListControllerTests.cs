@@ -23,6 +23,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this._sut = new ListController(
                 this.PlanRepositoryMock.Object, 
                 this.ItemRepositoryMock.Object, 
+                this.ItemToBuyRepositoryMock.Object,
                 this.ShoppingListRepositoryMock.Object, 
                 this.RecipeRepositoryMock.Object,
                 this._shoppingListModelMock.Object);
@@ -521,10 +522,13 @@ namespace KitchenServiceV2.Tests.Controllers
                     }
                 });
 
-            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()))
+            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(), It.IsAny<IReadOnlyCollection<ItemToBuy>>()))
                 .Returns(new ShoppingList());
 
             this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>())).Returns(Task.CompletedTask);
+
+            this.ItemToBuyRepositoryMock.Setup(x => x.GetAll(It.IsAny<String>())).ReturnsAsync(new List<ItemToBuy>());
+            this.ItemToBuyRepositoryMock.Setup(x => x.Remove(It.IsAny<String>())).Returns(Task.CompletedTask);
 
             await this._sut.GenerateList();
 
@@ -534,7 +538,9 @@ namespace KitchenServiceV2.Tests.Controllers
                         It.Is<IEnumerable<Recipe>>(col =>
                             col.Count(r => r.Id.ToString() == "599a98f185142b3ce0f96598") == 2
                         ),
-                        It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()),
+                        It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(),
+                        It.IsAny<IReadOnlyCollection<ItemToBuy>>()),
+
                     Times.Once);
         }
 
@@ -602,8 +608,11 @@ namespace KitchenServiceV2.Tests.Controllers
                     }
                 });
 
-            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()))
+            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(), It.IsAny<IReadOnlyCollection<ItemToBuy>>()))
                 .Returns(new ShoppingList());
+
+            this.ItemToBuyRepositoryMock.Setup(x => x.GetAll(It.IsAny<String>())).ReturnsAsync(new List<ItemToBuy>());
+            this.ItemToBuyRepositoryMock.Setup(x => x.Remove(It.IsAny<String>())).Returns(Task.CompletedTask);
 
             this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>())).Returns(Task.CompletedTask);
 
@@ -615,7 +624,8 @@ namespace KitchenServiceV2.Tests.Controllers
                     It.Is<IEnumerable<Recipe>>(col =>
                         col.Count(r => r.Id.ToString() == "599a98f185142b3ce0f96598") == 2
                     ), 
-                    It.IsAny<IReadOnlyDictionary<ObjectId, Item>>()), 
+                    It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(),
+                        It.IsAny<IReadOnlyCollection<ItemToBuy>>()), 
                     Times.Once);
         }
     }

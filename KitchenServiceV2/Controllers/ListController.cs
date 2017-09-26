@@ -19,16 +19,19 @@ namespace KitchenServiceV2.Controllers
     {
         private readonly IShoppingListRepository _shoppingListRepository;
         private readonly IShoppingListModel _shoppingListModel;
+        private readonly IItemToBuyRepository _itemToBuyRepository;
 
         public ListController(
             IPlanRepository planRepository, 
-            IItemRepository itemRepository, 
+            IItemRepository itemRepository,
+            IItemToBuyRepository itemToBuyRepository,
             IShoppingListRepository shoppingListRepository,
             IRecipeRepository recipeRepository,
             IShoppingListModel shoppingListModel) : base(planRepository, itemRepository, recipeRepository)
         {
             this._shoppingListRepository = shoppingListRepository;
             this._shoppingListModel = shoppingListModel;
+            this._itemToBuyRepository = itemToBuyRepository;
         }
 
         [HttpGet("/api/list/open")]
@@ -78,7 +81,9 @@ namespace KitchenServiceV2.Controllers
             var recipes = await this.GetPlanRecipes(plans);
             if (!recipes.Any()) return string.Empty;
 
-            var itemsById = (await this.GetRecipeItems(recipes)).ToDictionary(x => x.Id);
+            var additionalItemsToBuy = await this._itemToBuyRepository.GetAll(LoggedInUserToken);
+
+            var itemsById = (await this.GetItems(recipes, additionalItemsToBuy.Select(x => x.ItemId))).ToDictionary(x => x.Id);
             if (!itemsById.Any()) return string.Empty;
 
             var recipesById = recipes.ToDictionary(x => x.Id);
@@ -86,9 +91,10 @@ namespace KitchenServiceV2.Controllers
                 .SelectMany(x => x.PlanItems)
                 .Select(x => recipesById.ContainsKey(x.RecipeId) ? recipesById[x.RecipeId] : null);
 
-            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, planRecipes.Where(x => x != null), itemsById);
+            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, planRecipes.Where(x => x != null), itemsById, additionalItemsToBuy);
 
             await this._shoppingListRepository.Upsert(shoppingList);
+            await this._itemToBuyRepository.Remove(LoggedInUserToken);
             return shoppingList.Id.ToString();
         }
 

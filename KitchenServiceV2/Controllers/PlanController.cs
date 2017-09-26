@@ -144,7 +144,7 @@ namespace KitchenServiceV2.Controllers
             if (recipesToUpdate.Any())
             {
                 var recipes = await this.RecipeRepository.Get(recipesToUpdate);
-                var items = await this.GetRecipeItems(recipes);
+                var items = await this.GetItems(recipes);
 
                 if (items.Any())
                 {

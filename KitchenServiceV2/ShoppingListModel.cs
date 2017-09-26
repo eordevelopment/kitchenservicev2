@@ -8,12 +8,12 @@ namespace KitchenServiceV2
 {
     public interface IShoppingListModel
     {
-        ShoppingList CreateShoppingList(string userToken, IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById);
+        ShoppingList CreateShoppingList(string userToken, IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyCollection<ItemToBuy> mustByItems);
     }
 
     public class ShoppingListModel : IShoppingListModel
     {
-        public ShoppingList CreateShoppingList(string userToken, IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById)
+        public ShoppingList CreateShoppingList(string userToken, IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyCollection<ItemToBuy> mustByItems)
         {
             var recipItemsById = recipes
                 .SelectMany(x => x.RecipeItems)
@@ -62,6 +62,29 @@ namespace KitchenServiceV2
                     shoppingList.OptionalItems.Add(shoppingListItem);
                 }
             }
+
+            foreach (var mustByItem in mustByItems)
+            {
+                var optionalItem = shoppingList.OptionalItems.FirstOrDefault(x => x.ItemId == mustByItem.ItemId);
+                if (optionalItem != null)
+                {
+                    shoppingList.OptionalItems.Remove(optionalItem);
+                    shoppingList.Items.Add(optionalItem);
+                    continue;
+                }
+
+                if(shoppingList.Items.Any(x => x.ItemId == mustByItem.ItemId))
+                    continue;
+
+                shoppingList.Items.Add(new ShoppingListItem
+                {
+                    IsDone = false,
+                    ItemId = mustByItem.ItemId,
+                    Amount = 1,
+                    TotalAmount = 1
+                });
+            }
+
             return shoppingList;
         }
     }

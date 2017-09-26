@@ -58,7 +58,7 @@ namespace KitchenServiceV2.Tests
                 }
             };
 
-            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById);
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, new List<ItemToBuy>());
 
             Assert.NotNull(result);
             Assert.Equal(false, result.IsDone);
@@ -124,7 +124,7 @@ namespace KitchenServiceV2.Tests
                 }
             };
 
-            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById);
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, new List<ItemToBuy>());
 
             Assert.NotNull(result);
             Assert.Equal(1, result.Items.Count);
@@ -187,7 +187,7 @@ namespace KitchenServiceV2.Tests
                 }
             };
 
-            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById);
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, new List<ItemToBuy>());
 
             Assert.NotNull(result);
             Assert.Equal(1, result.Items.Count);
@@ -235,7 +235,7 @@ namespace KitchenServiceV2.Tests
                 }
             };
 
-            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById);
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, new List<ItemToBuy>());
 
             Assert.NotNull(result);
             Assert.Equal(false, result.IsDone);
@@ -248,6 +248,184 @@ namespace KitchenServiceV2.Tests
                 itm.IsDone == false &&
                 itm.ItemId.ToString() == "599a98f185142b3ce0f96598" &&
                 itm.Amount == 4 && itm.TotalAmount == 4
+            ));
+        }
+
+        [Fact]
+        public void CreateShoppingAdditionalItemsMoveOptional()
+        {
+            var recipes = new List<Recipe>
+            {
+                new Recipe
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    Name = "test recipe 1",
+                    UserToken = UserToken,
+                    Key = "recipeKey",
+                    RecipeItems = new List<RecipeItem>
+                    {
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f96598"),
+                            Amount = 4
+                        }
+                    }
+                }
+            };
+
+            var itemsById = new Dictionary<ObjectId, Item>
+            {
+                {
+                    new ObjectId("599a98f185142b3ce0f96598"),
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 10
+                    }
+                }
+            };
+
+            var mustBuyItems = new List<ItemToBuy>
+            {
+                new ItemToBuy
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "userToken",
+                    ItemId = new ObjectId("599a98f185142b3ce0f96598")
+                }
+            };
+
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, mustBuyItems);
+
+            Assert.Equal(1, result.Items.Count);
+            Assert.False(result.OptionalItems.Any());
+            Assert.True(result.Items.Any(itm =>
+                itm.IsDone == false &&
+                itm.ItemId.ToString() == "599a98f185142b3ce0f96598" &&
+                itm.Amount == 4 && itm.TotalAmount == 4
+            ));
+        }
+
+        [Fact]
+        public void CreateShoppingAdditionalItemAlreadyInList()
+        {
+            var recipes = new List<Recipe>
+            {
+                new Recipe
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    Name = "test recipe 1",
+                    UserToken = UserToken,
+                    Key = "recipeKey",
+                    RecipeItems = new List<RecipeItem>
+                    {
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f96598"),
+                            Amount = 4
+                        }
+                    }
+                }
+            };
+
+            var itemsById = new Dictionary<ObjectId, Item>
+            {
+                {
+                    new ObjectId("599a98f185142b3ce0f96598"),
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 1
+                    }
+                }
+            };
+
+            var mustBuyItems = new List<ItemToBuy>
+            {
+                new ItemToBuy
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "userToken",
+                    ItemId = new ObjectId("599a98f185142b3ce0f96598")
+                }
+            };
+
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, mustBuyItems);
+
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Items.Count);
+            Assert.False(result.OptionalItems.Any());
+
+            Assert.True(result.Items.Any(itm =>
+                itm.IsDone == false &&
+                itm.ItemId.ToString() == "599a98f185142b3ce0f96598" &&
+                itm.Amount == 3 && itm.TotalAmount == 4
+            ));
+        }
+
+        [Fact]
+        public void CreateShoppingAdditionalItemAddToList()
+        {
+            var recipes = new List<Recipe>
+            {
+                new Recipe
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    Name = "test recipe 1",
+                    UserToken = UserToken,
+                    Key = "recipeKey",
+                    RecipeItems = new List<RecipeItem>
+                    {
+                        new RecipeItem
+                        {
+                            ItemId = new ObjectId("599a98f185142b3ce0f96598"),
+                            Amount = 4
+                        }
+                    }
+                }
+            };
+
+            var itemsById = new Dictionary<ObjectId, Item>
+            {
+                {
+                    new ObjectId("599a98f185142b3ce0f96598"),
+                    new Item
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96598"),
+                        Name = "item 1",
+                        Quantity = 1
+                    }
+                }
+            };
+
+            var mustBuyItems = new List<ItemToBuy>
+            {
+                new ItemToBuy
+                {
+                    Id = new ObjectId("599a98f185142b3ce0f965a0"),
+                    UserToken = "userToken",
+                    ItemId = new ObjectId("599a98f185142b3ce0f96599")
+                }
+            };
+
+            var result = this._sut.CreateShoppingList(UserToken, recipes, itemsById, mustBuyItems);
+
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Items.Count);
+            Assert.False(result.OptionalItems.Any());
+
+            Assert.True(result.Items.Any(itm =>
+                itm.IsDone == false &&
+                itm.ItemId.ToString() == "599a98f185142b3ce0f96598" &&
+                itm.Amount == 3 && itm.TotalAmount == 4
+            ));
+
+            Assert.True(result.Items.Any(itm =>
+                itm.IsDone == false &&
+                itm.ItemId.ToString() == "599a98f185142b3ce0f96599" &&
+                itm.Amount == 1 && itm.TotalAmount == 1
             ));
         }
     }

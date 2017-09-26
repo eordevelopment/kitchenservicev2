@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo;
 using KitchenServiceV2.Db.Mongo.Schema;
+using MongoDB.Bson;
 
 namespace KitchenServiceV2.Controllers
 {
@@ -29,12 +30,13 @@ namespace KitchenServiceV2.Controllers
             return Task.FromResult(new List<Recipe>());
         }
 
-        protected Task<List<Item>> GetRecipeItems(List<Recipe> recipes)
+        protected Task<List<Item>> GetItems(List<Recipe> recipes, IEnumerable<ObjectId> additionalItems = null)
         {
             if (recipes.Any())
             {
                 var recipeItems = recipes.SelectMany(x => x.RecipeItems).ToList();
                 var itemIds = recipeItems.Select(x => x.ItemId).Distinct().ToList();
+                if(additionalItems != null) itemIds.AddRange(additionalItems);
                 return this.ItemRepository.Get(itemIds);
             }
             return Task.FromResult(new List<Item>());

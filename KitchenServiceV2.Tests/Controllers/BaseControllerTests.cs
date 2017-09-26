@@ -18,6 +18,7 @@ namespace KitchenServiceV2.Tests.Controllers
         protected readonly Mock<IRecipeRepository> RecipeRepositoryMock = new Mock<IRecipeRepository>(MockBehavior.Strict);
         protected readonly Mock<IPlanRepository> PlanRepositoryMock = new Mock<IPlanRepository>(MockBehavior.Strict);
         protected readonly Mock<IShoppingListRepository> ShoppingListRepositoryMock = new Mock<IShoppingListRepository>(MockBehavior.Strict);
+        protected readonly Mock<IItemToBuyRepository> ItemToBuyRepositoryMock = new Mock<IItemToBuyRepository>(MockBehavior.Strict);
 
         protected ITestOutputHelper Output;
 
@@ -37,9 +38,6 @@ namespace KitchenServiceV2.Tests.Controllers
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
-
-            //controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
-            //controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = "Basic UserToken";
         }
     }
 }
