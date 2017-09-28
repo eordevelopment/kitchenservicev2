@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using KitchenServiceV2.Db.Mongo.Repository;
 using KitchenServiceV2.Db.Mongo.Schema;
@@ -65,6 +66,38 @@ namespace KitchenServiceV2.Tests.Database
             await this._sut.Remove("userToken");
             existingItems = await this._sut.GetAll("userToken");
             Assert.Equal(0, existingItems.Count);
+        }
+
+        [Fact]
+        public async Task CanFindByItemIds()
+        {
+            var itemsToBuy = new List<ItemToBuy>
+            {
+                new ItemToBuy
+                {
+                    UserToken = "userToken",
+                    ItemId = new ObjectId("599a98f185142b3ce0f96597")
+                },
+                new ItemToBuy
+                {
+                    UserToken = "userToken",
+                    ItemId = new ObjectId("599a98f185142b3ce0f96598")
+                },
+                new ItemToBuy
+                {
+                    UserToken = "userToken",
+                    ItemId = new ObjectId("599a98f185142b3ce0f96599")
+                }
+            };
+
+            await this._sut.Upsert(itemsToBuy);
+            var existingItems = await this._sut.GetAll("userToken");
+            Assert.Equal(3, existingItems.Count);
+
+            existingItems = await this._sut.FindByItemIds("userToken", new[] { new ObjectId("599a98f185142b3ce0f96597"), new ObjectId("599a98f185142b3ce0f96598") });
+            Assert.Equal(2, existingItems.Count);
+            Assert.NotNull(existingItems.FirstOrDefault(x => x.ItemId.ToString() == "599a98f185142b3ce0f96597"));
+            Assert.NotNull(existingItems.FirstOrDefault(x => x.ItemId.ToString() == "599a98f185142b3ce0f96598"));
         }
     }
 }

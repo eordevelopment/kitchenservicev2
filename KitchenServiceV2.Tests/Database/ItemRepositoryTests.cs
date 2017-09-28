@@ -163,5 +163,39 @@ namespace KitchenServiceV2.Tests.Database
             Assert.NotNull(dbItems.FirstOrDefault(x => x.Name == "test item - updated" && x.Id == item.Id));
             Assert.NotNull(dbItems.FirstOrDefault(x => x.Name == "test item 2"));
         }
+
+        [Fact]
+        public async Task CanCount()
+        {
+            var items = new List<Item>
+            {
+                new Item
+                {
+                    Id = ObjectId.Empty,
+                    UserToken = "Token123",
+                    Name = "test item 1",
+                    Quantity = 10,
+                    UnitType = "ml"
+                },
+                new Item
+                {
+                    Id = ObjectId.Empty,
+                    UserToken = "Token123",
+                    Name = "test item 2",
+                    Quantity = 20,
+                    UnitType = "ml"
+                }
+            };
+
+            await this._sut.Upsert(items);
+            var num = await this._sut.CountItems("Token123", "test");
+            Assert.Equal(2, num);
+
+            num = await this._sut.CountItems("Token123", "test item 1");
+            Assert.Equal(1, num);
+
+            num = await this._sut.CountItems("Token123", "this is not the item you are looking for");
+            Assert.Equal(0, num);
+        }
     }
 }

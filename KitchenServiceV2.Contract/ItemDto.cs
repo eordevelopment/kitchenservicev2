@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace KitchenServiceV2.Contract
 {
@@ -16,5 +17,11 @@ namespace KitchenServiceV2.Contract
 
         [DataMember]
         public string UnitType { get; set; }
+
+        [DataMember]
+        public bool FlaggedForNextShop { get; set; }
+
+        [DataMember]
+        public IEnumerable<RecipeDto> Recipes { get; set; }
     }
 }

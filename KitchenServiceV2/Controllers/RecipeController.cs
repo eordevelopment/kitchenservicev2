@@ -91,13 +91,14 @@ namespace KitchenServiceV2.Controllers
                 recipeItem.Item.Quantity = item.Quantity;
                 recipeItem.Item.UnitType = item.UnitType;
 
-                recipeItem.FlaggedForNextShop = recipeItemsToBuyByItemId.ContainsKey(recipeItem.Item.Id);
+                recipeItem.Item.FlaggedForNextShop = recipeItemsToBuyByItemId.ContainsKey(recipeItem.Item.Id);
             }
 
 
             var plans = await this._planRepository.GetRecipePlans(recipe.Id);
             dto.AssignedPlans = plans.Select(Mapper.Map<PlanDto>).ToList();
 
+            dto.AccessLevel = AccessLevelEnum.Edit;
             return dto;
         }
 

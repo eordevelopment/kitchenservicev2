@@ -214,7 +214,7 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.Equal(2, result.RecipeItems.Count);
 
             Assert.Equal("item 1", result.RecipeItems[0].Item.Name);
-            Assert.True(result.RecipeItems[0].FlaggedForNextShop);
+            Assert.True(result.RecipeItems[0].Item.FlaggedForNextShop);
             Assert.Equal(1, result.RecipeItems[0].Item.Quantity);
             Assert.Equal("1", result.RecipeItems[0].Item.UnitType);
             Assert.Equal(10, result.RecipeItems[0].Amount);
@@ -222,7 +222,7 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.Equal("599a98f185142b3ce0f96599", result.RecipeItems[0].Item.Id);
 
             Assert.Equal("item 2", result.RecipeItems[1].Item.Name);
-            Assert.False(result.RecipeItems[1].FlaggedForNextShop);
+            Assert.False(result.RecipeItems[1].Item.FlaggedForNextShop);
             Assert.Equal(2, result.RecipeItems[1].Item.Quantity);
             Assert.Equal("2", result.RecipeItems[1].Item.UnitType);
             Assert.Equal(20, result.RecipeItems[1].Amount);

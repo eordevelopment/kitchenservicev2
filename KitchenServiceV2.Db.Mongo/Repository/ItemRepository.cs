@@ -23,5 +23,10 @@ namespace KitchenServiceV2.Db.Mongo.Repository
                 .Limit(max)
                 .ToListAsync();
         }
+
+        public Task<long> CountItems(string userToken, string name)
+        {
+            return this.Collection.CountAsync(p => p.UserToken == userToken && p.Name.StartsWith(name.ToLower()));
+        }
     }
 }

@@ -14,8 +14,7 @@ namespace KitchenServiceV2.Tests.Controllers
 {
     public class CategoryControllerTests : BaseControllerTests
     {
-        private readonly CategoryController _sut;
-        
+        private readonly CategoryController _sut; 
 
         public CategoryControllerTests(ITestOutputHelper output) : base(output)
         {

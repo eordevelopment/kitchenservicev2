@@ -8,5 +8,7 @@ namespace KitchenServiceV2.Db.Mongo
     {
         Task<Item> FindItem(string userToken, string name);
         Task<List<Item>> SearchItems(string userToken, string name, int max);
+
+        Task<long> CountItems(string userToken, string name);
     }
 }

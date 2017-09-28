@@ -25,5 +25,8 @@ namespace KitchenServiceV2.Contract
 
         [DataMember]
         public List<PlanDto> AssignedPlans { get; set; }
+
+        [DataMember]
+        public AccessLevelEnum AccessLevel { get; set; }
     }
 }
