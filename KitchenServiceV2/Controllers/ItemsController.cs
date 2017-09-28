@@ -32,7 +32,7 @@ namespace KitchenServiceV2.Controllers
         public async Task<IEnumerable<ItemDto>> Get()
         {
             var items = await this._itemRepository.GetAll(LoggedInUserToken);
-            return await this.ToContract(items);
+            return (await this.ToContract(items)).OrderBy(x => x.Name);
         }
 
         [HttpGet("{id}")]
