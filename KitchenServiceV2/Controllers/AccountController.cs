@@ -46,12 +46,13 @@ namespace KitchenServiceV2.Controllers
             if (existingUser == null)
             {
                 user.UserToken = Guid.NewGuid().ToString();
-                await this._repository.Upsert(user);
             }
             else
             {
                 user.UserToken = existingUser.UserToken;
+                user.Id = existingUser.Id;
             }
+            await this._repository.Upsert(user);
 
             var claims = new[]
             {
