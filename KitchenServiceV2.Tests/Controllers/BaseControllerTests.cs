@@ -19,6 +19,7 @@ namespace KitchenServiceV2.Tests.Controllers
         protected readonly Mock<IPlanRepository> PlanRepositoryMock = new Mock<IPlanRepository>(MockBehavior.Strict);
         protected readonly Mock<IShoppingListRepository> ShoppingListRepositoryMock = new Mock<IShoppingListRepository>(MockBehavior.Strict);
         protected readonly Mock<IItemToBuyRepository> ItemToBuyRepositoryMock = new Mock<IItemToBuyRepository>(MockBehavior.Strict);
+        protected readonly Mock<ICollaborationRepository> CollaborationRepositoryMock = new Mock<ICollaborationRepository>(MockBehavior.Strict);
 
         protected ITestOutputHelper Output;
 

@@ -34,6 +34,7 @@ namespace KitchenServiceV2
 
             services.AddScoped<IDbContext, DbContext>(ctx => new DbContext(conn, db));
 
+            services.AddScoped<ICollaborationRepository, CollaborationRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IItemRepository, ItemRepository>();
