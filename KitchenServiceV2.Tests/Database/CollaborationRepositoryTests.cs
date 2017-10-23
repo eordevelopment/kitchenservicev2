@@ -49,7 +49,7 @@ namespace KitchenServiceV2.Tests.Database
                         new Collaborator
                         {
                             Email = "test@user.com",
-                            UserId = new ObjectId("599a98f185142b3ce0f9659c"),
+                            UserToken = "sharedUser",
                             AccessLevel = 1
                         }
                     }
@@ -86,7 +86,7 @@ namespace KitchenServiceV2.Tests.Database
             Assert.Equal(1, result.Count);
             Assert.Equal("user2", result.First().UserToken);
 
-            result.First().Collaborators.First().UserId = new ObjectId("599a98f185142b3ce0f9659c");
+            result.First().Collaborators.First().UserToken = "sharedUser";
             await this._sut.Upsert(result);
 
             var pending = await this._sut.FindPending("test@user.com");
@@ -97,7 +97,7 @@ namespace KitchenServiceV2.Tests.Database
             Assert.NotNull(all);
             Assert.Equal(1, all.Count);
             Assert.Equal("user2", all.First().UserToken);
-            Assert.Equal("599a98f185142b3ce0f9659c", all.First().Collaborators.First().UserId.ToString());
+            Assert.Equal("sharedUser", all.First().Collaborators.First().UserToken);
 
         }
     }

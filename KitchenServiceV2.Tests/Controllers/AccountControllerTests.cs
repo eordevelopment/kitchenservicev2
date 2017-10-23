@@ -215,7 +215,7 @@ namespace KitchenServiceV2.Tests.Controllers
                     c.Collaborators.Count == 1 &&
                     c.Collaborators.FirstOrDefault(cl =>
                         cl.Email.Equals("test@user.com") &&
-                        cl.UserId.ToString().Equals("599a98f185142b3ce0f965a0")) != null
+                        cl.UserToken.Equals(user.UserToken)) != null
                 ) != null
             )), Times.Once);
         }

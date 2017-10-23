@@ -21,37 +21,60 @@ namespace KitchenServiceV2.Controllers
         private readonly IItemRepository _itemRepository;
         private readonly IItemToBuyRepository _itemToBuyRepository;
         private readonly IPlanRepository _planRepository;
+        private readonly ICollaborationRepository _collaborationRepository;
+        private readonly IUserRepository _userRepository;
 
         public RecipeController(
             IRecipeRepository recipeRepository, 
             IRecipeTypeRepository recipeTypeRepository, 
             IItemRepository itemRepository,
             IItemToBuyRepository itemToBuyRepository,
-            IPlanRepository planRepository)
+            IPlanRepository planRepository,
+            ICollaborationRepository collaborationRepository,
+            IUserRepository userRepository)
         {
             this._recipeRepository = recipeRepository;
             this._recipeTypeRepository = recipeTypeRepository;
             this._itemRepository = itemRepository;
             this._planRepository = planRepository;
             this._itemToBuyRepository = itemToBuyRepository;
+            this._collaborationRepository = collaborationRepository;
+            this._userRepository = userRepository;
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
         public async Task<List<RecipeDto>> Get()
         {
-            var recipes = await this._recipeRepository.GetAll(this.LoggedInUserToken);
+            var collaboratorsByToken = (await this._collaborationRepository.Find(this.LoggedInUserToken)).ToDictionary(x => x.UserToken);
+            var userTokens = new List<String>
+            {
+                this.LoggedInUserToken
+            };
+            userTokens.AddRange(collaboratorsByToken.Select(x => x.Key));
+
+            var recipes = await this._recipeRepository.GetRecipes(userTokens);
             var result = new List<RecipeDto>();
             if (recipes == null) return result;
 
             var recipeTypeIds = recipes.Select(x => x.RecipeTypeId).Distinct().ToList();
-
             var recipeTypesById = (await this._recipeTypeRepository.Get(recipeTypeIds)).ToDictionary(x => x.Id, Mapper.Map<RecipeTypeDto>);
+
+            userTokens = recipes.Select(x => x.UserToken).Distinct().ToList();
+            var usersByToken = (await this._userRepository.FindUsers(userTokens)).ToDictionary(x => x.UserToken);
 
             foreach (var recipe in recipes)
             {
                 var dto = Mapper.Map<RecipeDto>(recipe);
                 dto.RecipeType = recipeTypesById.ContainsKey(recipe.RecipeTypeId) ? recipeTypesById[recipe.RecipeTypeId] : null;
+
+                if (recipe.UserToken != this.LoggedInUserToken)
+                {
+                    var user = usersByToken[recipe.UserToken];
+                    dto.Owner = Mapper.Map<OwnerDto>(user);
+                    var collaboration = collaboratorsByToken[recipe.UserToken];
+                    dto.AccessLevel = (AccessLevelEnum)collaboration.Collaborators.First(x => x.UserToken == this.LoggedInUserToken).AccessLevel;
+                }
 
                 result.Add(dto);
             }

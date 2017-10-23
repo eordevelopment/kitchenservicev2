@@ -28,5 +28,8 @@ namespace KitchenServiceV2.Contract
 
         [DataMember]
         public AccessLevelEnum AccessLevel { get; set; }
+
+        [DataMember]
+        public OwnerDto Owner { get; set; }
     }
 }

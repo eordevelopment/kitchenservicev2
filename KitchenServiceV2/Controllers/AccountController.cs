@@ -68,7 +68,7 @@ namespace KitchenServiceV2.Controllers
             {
                 foreach (var collaborator in collaboration.Collaborators.Where(x => x.Email == user.Email))
                 {
-                    collaborator.UserId = user.Id;
+                    collaborator.UserToken = user.UserToken;
                 }
             }
 

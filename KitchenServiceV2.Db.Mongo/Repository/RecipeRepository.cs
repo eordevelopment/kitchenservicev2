@@ -13,6 +13,12 @@ namespace KitchenServiceV2.Db.Mongo.Repository
         {
         }
 
+        public Task<List<Recipe>> GetRecipes(IReadOnlyCollection<string> userTokens)
+        {
+            if (userTokens == null || !userTokens.Any()) return Task.FromResult(new List<Recipe>());
+            return this.Collection.Find(p => userTokens.Contains(p.UserToken)).ToListAsync();
+        }
+
         public Task<Recipe> Find(string userToken, string name)
         {
             return this.Collection.Find(x => x.UserToken == userToken && x.Name == name.ToLower()).FirstOrDefaultAsync();

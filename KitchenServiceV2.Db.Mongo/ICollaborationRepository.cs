@@ -7,5 +7,6 @@ namespace KitchenServiceV2.Db.Mongo
     public interface ICollaborationRepository : IRepository<Collaboration>
     {
         Task<List<Collaboration>> FindPending(string pendingUserEmailAddress);
+        Task<List<Collaboration>> Find(string sharedUserToken);
     }
 }

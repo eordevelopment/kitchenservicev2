@@ -23,7 +23,9 @@ namespace KitchenServiceV2.Tests.Controllers
                 this.RecipeTypeRepositoryMock.Object, 
                 this.ItemRepositoryMock.Object,
                 this.ItemToBuyRepositoryMock.Object,
-                this.PlanRepositoryMock.Object);
+                this.PlanRepositoryMock.Object,
+                this.CollaborationRepositoryMock.Object,
+                this.UserRepositoryMock.Object);
             this.SetupController(this._sut);
         }
 
