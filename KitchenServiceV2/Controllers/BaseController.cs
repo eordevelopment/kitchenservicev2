@@ -1,5 +1,8 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using KitchenServiceV2.Contract;
+using KitchenServiceV2.Db.Mongo.Schema;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KitchenServiceV2.Controllers
@@ -19,6 +22,20 @@ namespace KitchenServiceV2.Controllers
                 this._userToken = userId;
                 return this._userToken;
             }
+        }
+
+        protected bool CanView(IDocument document, IEnumerable<Collaboration> collaborations)
+        {
+            return document.UserToken == this.LoggedInUserToken ||
+                   collaborations.Any(x => x.UserToken == document.UserToken && x.Collaborators.Any(y => y.UserToken == this.LoggedInUserToken));
+        }
+
+        protected bool CanEdit(IDocument document, IEnumerable<Collaboration> collaborations)
+        {
+            return document.UserToken == this.LoggedInUserToken ||
+                   collaborations.Any(
+                       x => x.UserToken == document.UserToken &&
+                            x.Collaborators.Any(y => y.UserToken == this.LoggedInUserToken && y.AccessLevel == (int)AccessLevelEnum.Edit));
         }
     }
 }

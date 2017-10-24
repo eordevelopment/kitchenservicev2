@@ -9,5 +9,6 @@ namespace KitchenServiceV2.Db.Mongo
     {
         Task<User> FindByGoogleId(string sub);
         Task<List<User>> FindUsers(IReadOnlyCollection<String> userTokens);
+        Task<User> FindUser(String userToken);
     }
 }

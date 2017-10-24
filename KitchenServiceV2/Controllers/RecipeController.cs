@@ -73,7 +73,11 @@ namespace KitchenServiceV2.Controllers
                     var user = usersByToken[recipe.UserToken];
                     dto.Owner = Mapper.Map<OwnerDto>(user);
                     var collaboration = collaboratorsByToken[recipe.UserToken];
-                    dto.AccessLevel = (AccessLevelEnum)collaboration.Collaborators.First(x => x.UserToken == this.LoggedInUserToken).AccessLevel;
+                    dto.AccessLevel = (AccessLevelEnum) collaboration.Collaborators.First(x => x.UserToken == this.LoggedInUserToken).AccessLevel;
+                }
+                else
+                {
+                    dto.AccessLevel = AccessLevelEnum.Edit;
                 }
 
                 result.Add(dto);
@@ -93,8 +97,11 @@ namespace KitchenServiceV2.Controllers
             var objectId = Mapper.Map<ObjectId>(id);
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
+            var collaborations = await this._collaborationRepository.Find(this.LoggedInUserToken);
+            var collaboratorsByToken = collaborations.ToDictionary(x => x.UserToken);
+
             var recipe = await this._recipeRepository.Get(objectId);
-            if (recipe == null || recipe.UserToken != LoggedInUserToken) throw new ArgumentException($"No resource with id: {id}");
+            if (recipe == null || !this.CanView(recipe, collaborations)) throw new ArgumentException($"No resource with id: {id}");
 
             var dto = Mapper.Map<RecipeDto>(recipe);
 
@@ -121,7 +128,18 @@ namespace KitchenServiceV2.Controllers
             var plans = await this._planRepository.GetRecipePlans(recipe.Id);
             dto.AssignedPlans = plans.Select(Mapper.Map<PlanDto>).ToList();
 
-            dto.AccessLevel = AccessLevelEnum.Edit;
+            if (recipe.UserToken != this.LoggedInUserToken)
+            {
+                var user = await this._userRepository.FindUser(recipe.UserToken);
+                dto.Owner = Mapper.Map<OwnerDto>(user);
+                var collaboration = collaboratorsByToken[recipe.UserToken];
+                dto.AccessLevel = (AccessLevelEnum) collaboration.Collaborators.First(x => x.UserToken == this.LoggedInUserToken).AccessLevel;
+            }
+            else
+            {
+                dto.AccessLevel = AccessLevelEnum.Edit;
+            }
+            
             return dto;
         }
 
@@ -197,8 +215,10 @@ namespace KitchenServiceV2.Controllers
             var objectId = Mapper.Map<ObjectId>(id);
             if (objectId == ObjectId.Empty) throw new ArgumentException($"Invalid id: {id}");
 
+            var collaborations = await this._collaborationRepository.Find(this.LoggedInUserToken);
+
             var existingRecipe = await this._recipeRepository.Get(objectId);
-            if (existingRecipe == null || existingRecipe.UserToken != LoggedInUserToken)
+            if (existingRecipe == null || !this.CanEdit(existingRecipe, collaborations))
             {
                 throw new ArgumentException($"No resource with id: {id}");
             }

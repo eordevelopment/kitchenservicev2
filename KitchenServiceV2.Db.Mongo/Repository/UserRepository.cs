@@ -21,5 +21,10 @@ namespace KitchenServiceV2.Db.Mongo.Repository
         {
             return this.Collection.Find(x => userTokens.Contains(x.UserToken)).ToListAsync();
         }
+
+        public Task<User> FindUser(string userToken)
+        {
+            return this.Collection.Find(x => x.UserToken == userToken).FirstOrDefaultAsync();
+        }
     }
 }
