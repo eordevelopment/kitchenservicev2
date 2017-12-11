@@ -18,3 +18,7 @@
 /.vs/KitchenServiceV2/v15/.suo
 /.vs/config/applicationhost.config
 /.vs/KitchenServiceV2/v15/sqlite3/storage.ide-journal
+/.vs/KitchenServiceV2/v15/Server/sqlite3/storage.ide-wal
+/.vs/KitchenServiceV2/v15/Server/sqlite3/storage.ide-shm
+/.vs/KitchenServiceV2/v15/Server/sqlite3/storage.ide
+/.vs/KitchenServiceV2/v15/Server/sqlite3/db.lock

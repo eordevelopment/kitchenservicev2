@@ -64,7 +64,7 @@ namespace KitchenServiceV2.Controllers
             var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                 _config["Tokens:Issuer"],
                 claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.Now.AddDays(4),
                 signingCredentials: creds);
 
             return new AuthResponseDto
