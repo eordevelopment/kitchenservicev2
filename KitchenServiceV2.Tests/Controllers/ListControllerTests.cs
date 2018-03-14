@@ -49,14 +49,16 @@ namespace KitchenServiceV2.Tests.Controllers
                             ItemId = new ObjectId("599a98f185142b3ce0f96598"),
                             IsDone = true,
                             Amount = 10,
-                            TotalAmount = 100
+                            TotalAmount = 100,
+                            RecipeIds = new HashSet<ObjectId>{ new ObjectId("599a98f185142b3ce0f96590"), new ObjectId("599a98f185142b3ce0f96591") }
                         },
                         new ShoppingListItem
                         {
                             ItemId = new ObjectId("599a98f185142b3ce0f96599"),
                             IsDone = false,
                             Amount = 20,
-                            TotalAmount = 200
+                            TotalAmount = 200,
+                            RecipeIds = new HashSet<ObjectId>{ new ObjectId("599a98f185142b3ce0f96590"), new ObjectId("599a98f185142b3ce0f96591") }
                         }
                     },
                     OptionalItems = new List<ShoppingListItem>
@@ -66,14 +68,16 @@ namespace KitchenServiceV2.Tests.Controllers
                             ItemId = new ObjectId("599a98f185142b3ce0f9659b"),
                             IsDone = false,
                             Amount = 30,
-                            TotalAmount = 300
+                            TotalAmount = 300,
+                            RecipeIds = new HashSet<ObjectId>{ new ObjectId("599a98f185142b3ce0f96591") }
                         },
                         new ShoppingListItem
                         {
                             ItemId = new ObjectId("599a98f185142b3ce0f9659c"),
                             IsDone = false,
                             Amount = 40,
-                            TotalAmount = 500
+                            TotalAmount = 500,
+                            RecipeIds = new HashSet<ObjectId>{ new ObjectId("599a98f185142b3ce0f96590") }
                         }
                     }
                 });
@@ -111,6 +115,21 @@ namespace KitchenServiceV2.Tests.Controllers
                     }
                 });
 
+            this.RecipeRepositoryMock.Setup(x => x.Get(It.IsAny<IReadOnlyCollection<ObjectId>>()))
+                .ReturnsAsync(new List<Recipe>
+                {
+                    new Recipe
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96590"),
+                        Name = "recipe 1"
+                    },
+                    new Recipe
+                    {
+                        Id = new ObjectId("599a98f185142b3ce0f96591"),
+                        Name = "recipe 2"
+                    }
+                });
+
             var result = await this._sut.GetOpen();
 
             Assert.NotNull(result);
@@ -121,41 +140,54 @@ namespace KitchenServiceV2.Tests.Controllers
             Assert.Equal(2, result.Items.Count);
             Assert.Equal(2, result.OptionalItems.Count);
 
-            Assert.NotNull(result.Items.Any(itm =>
+            Assert.NotNull(result.Items.FirstOrDefault(itm =>
                 itm.IsDone &&
                 itm.Amount == 10 &&
                 itm.TotalAmount == 100 &&
                 itm.Item.Id == "599a98f185142b3ce0f96598" &&
                 itm.Item.Name == "item 1" &&
                 itm.Item.Quantity == 1000 &&
-                itm.Item.UnitType == "ml"));
+                itm.Item.UnitType == "ml" &&
+                itm.Recipes?.Count() == 2 &&
+                itm.Recipes?.FirstOrDefault(r => r.Id == "599a98f185142b3ce0f96590" && r.Name == "recipe 1") != null &&
+                itm.Recipes?.FirstOrDefault(r => r.Id == "599a98f185142b3ce0f96591" && r.Name == "recipe 2") != null));
 
-            Assert.NotNull(result.Items.Any(itm =>
-                itm.IsDone &&
+            Assert.NotNull(result.Items.FirstOrDefault(itm =>
+                !itm.IsDone &&
                 itm.Amount == 20 &&
                 itm.TotalAmount == 200 &&
                 itm.Item.Id == "599a98f185142b3ce0f96599" &&
                 itm.Item.Name == "item 2" &&
                 itm.Item.Quantity == 2000 &&
-                itm.Item.UnitType == "ml"));
+                itm.Item.UnitType == "ml" &&
+                itm.Recipes != null &&
+                itm.Recipes.Count() == 2 &&
+                itm.Recipes?.FirstOrDefault(r => r.Id == "599a98f185142b3ce0f96590" && r.Name == "recipe 1") != null &&
+                itm.Recipes?.FirstOrDefault(r => r.Id == "599a98f185142b3ce0f96591" && r.Name == "recipe 2") != null));
 
-            Assert.NotNull(result.OptionalItems.Any(itm =>
-                itm.IsDone &&
+            Assert.NotNull(result.OptionalItems.FirstOrDefault(itm =>
+                !itm.IsDone &&
                 itm.Amount == 30 &&
                 itm.TotalAmount == 300 &&
                 itm.Item.Id == "599a98f185142b3ce0f9659b" &&
                 itm.Item.Name == "item 3" &&
                 itm.Item.Quantity == 3000 &&
-                itm.Item.UnitType == "ml"));
+                itm.Item.UnitType == "ml" &&
+                itm.Recipes != null &&
+                itm.Recipes.Count() == 1 &&
+                itm.Recipes.FirstOrDefault(r => r.Id == "599a98f185142b3ce0f96591" && r.Name == "recipe 2") != null));
 
-            Assert.NotNull(result.OptionalItems.Any(itm =>
-                itm.IsDone &&
+            Assert.NotNull(result.OptionalItems.FirstOrDefault(itm =>
+                !itm.IsDone &&
                 itm.Amount == 40 &&
-                itm.TotalAmount == 400 &&
+                itm.TotalAmount == 500 &&
                 itm.Item.Id == "599a98f185142b3ce0f9659c" &&
                 itm.Item.Name == "item 4" &&
                 itm.Item.Quantity == 4000 &&
-                itm.Item.UnitType == "ml"));
+                itm.Item.UnitType == "ml" &&
+                itm.Recipes != null &&
+                itm.Recipes.Count() == 1 &&
+                itm.Recipes.FirstOrDefault(r => r.Id == "599a98f185142b3ce0f96590" && r.Name == "recipe 1") != null));
         }
 
         [Fact]
@@ -202,7 +234,7 @@ namespace KitchenServiceV2.Tests.Controllers
                         IsDone = true,
                         Amount = 2,
                         TotalAmount = 4,
-                        Item = new ItemDto()
+                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96597" }
                     }
                 },
                 OptionalItems = new List<ShoppingListItemDto>
@@ -212,7 +244,15 @@ namespace KitchenServiceV2.Tests.Controllers
                         IsDone = false,
                         Amount = 10,
                         TotalAmount = 10,
-                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96598" }
+                        Item = new ItemDto{ Id = "599a98f185142b3ce0f96598" },
+                        Recipes = new List<RecipeDto>
+                        {
+                            new RecipeDto
+                            {
+                                Id = "599a98f185142b3ce0f96590",
+                                Name = "recipe 1"
+                            }
+                        }
                     }
                 }
             };
@@ -246,7 +286,11 @@ namespace KitchenServiceV2.Tests.Controllers
 
             Assert.NotNull(result);
             Assert.Equal(1, result.OptionalItems.Count);
-            Assert.NotNull(result.OptionalItems.FirstOrDefault(x => x.Item.Name == "item 1"));
+
+            var item = result.OptionalItems.FirstOrDefault(x => x.Item.Name == "item 1");
+            Assert.NotNull(item);
+            Assert.Equal(1, item.Recipes?.Count());
+            Assert.NotNull(item.Recipes?.FirstOrDefault(x => x.Id == "599a98f185142b3ce0f96590" && x.Name == "recipe 1"));
 
             this.ShoppingListRepositoryMock.Verify(x => x.Upsert(It.Is<ShoppingList>(l =>
                 l.IsDone &&
@@ -264,7 +308,9 @@ namespace KitchenServiceV2.Tests.Controllers
                     !i.IsDone &&
                     i.Amount == 10 &&
                     i.TotalAmount == 10 &&
-                    i.ItemId.ToString() == "599a98f185142b3ce0f96598"
+                    i.ItemId.ToString() == "599a98f185142b3ce0f96598" &&
+                    i.RecipeIds.Count == 1 &&
+                    i.RecipeIds.FirstOrDefault(rId => rId.ToString() == "599a98f185142b3ce0f96590") != null
                 )
             )), Times.Once);
         }
@@ -522,7 +568,7 @@ namespace KitchenServiceV2.Tests.Controllers
                     }
                 });
 
-            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(), It.IsAny<IReadOnlyCollection<ItemToBuy>>()))
+            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<ICollection<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(), It.IsAny<IReadOnlyCollection<ItemToBuy>>()))
                 .Returns(new ShoppingList());
 
             this.ShoppingListRepositoryMock.Setup(x => x.Upsert(It.IsAny<ShoppingList>())).Returns(Task.CompletedTask);
@@ -535,7 +581,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this._shoppingListModelMock
                 .Verify(x => x.CreateShoppingList(
                         It.IsAny<string>(),
-                        It.Is<IEnumerable<Recipe>>(col =>
+                        It.Is<ICollection<Recipe>>(col =>
                             col.Count(r => r.Id.ToString() == "599a98f185142b3ce0f96598") == 2
                         ),
                         It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(),
@@ -608,7 +654,7 @@ namespace KitchenServiceV2.Tests.Controllers
                     }
                 });
 
-            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<IEnumerable<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(), It.IsAny<IReadOnlyCollection<ItemToBuy>>()))
+            this._shoppingListModelMock.Setup(x => x.CreateShoppingList(It.IsAny<string>(), It.IsAny<ICollection<Recipe>>(), It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(), It.IsAny<IReadOnlyCollection<ItemToBuy>>()))
                 .Returns(new ShoppingList());
 
             this.ItemToBuyRepositoryMock.Setup(x => x.GetAll(It.IsAny<String>())).ReturnsAsync(new List<ItemToBuy>());
@@ -621,7 +667,7 @@ namespace KitchenServiceV2.Tests.Controllers
             this._shoppingListModelMock
                 .Verify(x => x.CreateShoppingList(
                     It.IsAny<string>(), 
-                    It.Is<IEnumerable<Recipe>>(col =>
+                    It.Is<ICollection<Recipe>>(col =>
                         col.Count(r => r.Id.ToString() == "599a98f185142b3ce0f96598") == 2
                     ), 
                     It.IsAny<IReadOnlyDictionary<ObjectId, Item>>(),

@@ -8,16 +8,18 @@ namespace KitchenServiceV2
 {
     public interface IShoppingListModel
     {
-        ShoppingList CreateShoppingList(string userToken, IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyCollection<ItemToBuy> mustByItems);
+        ShoppingList CreateShoppingList(string userToken, ICollection<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyCollection<ItemToBuy> mustByItems);
     }
 
     public class ShoppingListModel : IShoppingListModel
     {
-        public ShoppingList CreateShoppingList(string userToken, IEnumerable<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyCollection<ItemToBuy> mustByItems)
+        public ShoppingList CreateShoppingList(string userToken, ICollection<Recipe> recipes, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyCollection<ItemToBuy> mustByItems)
         {
             var recipItemsById = recipes
                 .SelectMany(x => x.RecipeItems)
                 .ToLookup(x => x.ItemId);
+
+            var recipesByItemId = GetRecipesByItemId(recipes);
 
             var now = DateTimeOffset.UtcNow;
             var shoppingList = new ShoppingList
@@ -49,7 +51,8 @@ namespace KitchenServiceV2
                     ItemId = itemCollection.Key,
                     IsDone = false,
                     Amount = needed - inStock,
-                    TotalAmount = needed
+                    TotalAmount = needed,
+                    RecipeIds = recipesByItemId.ContainsKey(itemCollection.Key) ? recipesByItemId[itemCollection.Key] : new HashSet<ObjectId>()
                 };
 
                 if (needed > inStock)
@@ -86,6 +89,27 @@ namespace KitchenServiceV2
             }
 
             return shoppingList;
+        }
+
+        private static Dictionary<ObjectId, HashSet<ObjectId>> GetRecipesByItemId(ICollection<Recipe> recipes)
+        {
+            var recipesByItemId = new Dictionary<ObjectId, HashSet<ObjectId>>();
+            foreach (var recipe in recipes)
+            {
+                foreach (var item in recipe.RecipeItems)
+                {
+                    if (recipesByItemId.ContainsKey(item.ItemId))
+                    {
+                        recipesByItemId[item.ItemId].Add(recipe.Id);
+                    }
+                    else
+                    {
+                        recipesByItemId.Add(item.ItemId, new HashSet<ObjectId> { recipe.Id });
+                    }
+                }
+            }
+
+            return recipesByItemId;
         }
     }
 }

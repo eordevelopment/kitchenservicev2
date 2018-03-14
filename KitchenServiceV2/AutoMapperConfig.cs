@@ -7,6 +7,8 @@ using MongoDB.Bson;
 
 namespace KitchenServiceV2
 {
+    using System.Collections.Generic;
+
     public class AutoMapperConfig
     {
         public static void InitializeMapper()
@@ -61,10 +63,17 @@ namespace KitchenServiceV2
                 cfg.CreateMap<ShoppingListItem, ShoppingListItemDto>().AfterMap((src, dest) =>
                 {
                     dest.Item = new ItemDto{Id = src.ItemId.ToString()};
+                    dest.Recipes = src.RecipeIds?.Select(x => new RecipeDto {Id = x.ToString()}) ?? new List<RecipeDto>();
                 });
                 cfg.CreateMap<ShoppingListItemDto, ShoppingListItem>().AfterMap((src, dest) =>
                 {
                     dest.ItemId = Mapper.Map<ObjectId>(src.Item?.Id);
+                    dest.RecipeIds = new HashSet<ObjectId>();
+                    if (src.Recipes == null || !src.Recipes.Any()) return;
+                    foreach (var arg1Recipe in src.Recipes)
+                    {
+                        dest.RecipeIds.Add(Mapper.Map<ObjectId>(arg1Recipe.Id));
+                    }
                 });
 
                 cfg.CreateMap<string, ObjectId>().ConvertUsing(s =>

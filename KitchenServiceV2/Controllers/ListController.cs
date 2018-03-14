@@ -91,7 +91,7 @@ namespace KitchenServiceV2.Controllers
                 .SelectMany(x => x.PlanItems)
                 .Select(x => recipesById.ContainsKey(x.RecipeId) ? recipesById[x.RecipeId] : null);
 
-            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, planRecipes.Where(x => x != null), itemsById, additionalItemsToBuy);
+            var shoppingList = this._shoppingListModel.CreateShoppingList(LoggedInUserToken, planRecipes.Where(x => x != null).ToList(), itemsById, additionalItemsToBuy);
 
             await this._shoppingListRepository.Upsert(shoppingList);
             await this._itemToBuyRepository.Remove(LoggedInUserToken);
@@ -157,8 +157,8 @@ namespace KitchenServiceV2.Controllers
             await this._shoppingListRepository.Upsert(updatedList);
 
             var result = Mapper.Map<ShoppingListDto>(updatedList);
-            SetItems(result.Items, itemsById);
-            SetItems(result.OptionalItems, itemsById);
+            SetItems(result.Items, itemsById, value.Items?.ToDictionary(x => x.Item.Id));
+            SetItems(result.OptionalItems, itemsById, value.OptionalItems?.ToDictionary(x => x.Item.Id));
 
             return result;
         }
@@ -185,29 +185,38 @@ namespace KitchenServiceV2.Controllers
                 .Distinct()
                 .ToList();
 
+            var recipesIds = dbShoppingList.Items.SelectMany(x => x.RecipeIds)
+                .Concat(dbShoppingList.OptionalItems.SelectMany(x => x.RecipeIds))
+                .Distinct()
+                .ToList();
+
             var itemsById = (await this.ItemRepository.Get(itemIds)).ToDictionary(x => x.Id.ToString());
-            SetItems(dto.Items, itemsById);
-            SetItems(dto.OptionalItems, itemsById);
+            var recipesById = (await this.RecipeRepository.Get(recipesIds)).ToDictionary(x => x.Id.ToString());
+            SetItems(dto.Items, itemsById, recipesById);
+            SetItems(dto.OptionalItems, itemsById, recipesById);
         }
 
         [NonAction]
-        private static void SetItems(IEnumerable<ShoppingListItemDto> items, IReadOnlyDictionary<string, Item> itemsById)
+        private static void SetItems(IEnumerable<ShoppingListItemDto> items, IReadOnlyDictionary<string, Item> itemsById, Dictionary<string, Recipe> recipesById)
         {
             foreach (var itemDto in items)
             {
                 if (!itemsById.ContainsKey(itemDto.Item.Id)) continue;
                 itemDto.Item = Mapper.Map<ItemDto>(itemsById[itemDto.Item.Id]);
+                var recipeIds = itemDto.Recipes.Select(x => x.Id);
+                itemDto.Recipes = recipesById.Where(x => recipeIds.Contains(x.Key)).Select(r => Mapper.Map<RecipeDto>(r.Value)).ToList();
             }
         }
 
         [NonAction]
-        private static void SetItems(IEnumerable<ShoppingListItemDto> items, IReadOnlyDictionary<ObjectId, Item> itemsById)
+        private static void SetItems(IEnumerable<ShoppingListItemDto> items, IReadOnlyDictionary<ObjectId, Item> itemsById, IReadOnlyDictionary<string, ShoppingListItemDto> itemDtosById)
         {
             foreach (var itemDto in items)
             {
                 var id = Mapper.Map<ObjectId>(itemDto.Item.Id);
                 if (!itemsById.ContainsKey(id)) continue;
                 itemDto.Item = Mapper.Map<ItemDto>(itemsById[id]);
+                itemDto.Recipes = itemDtosById != null && itemDtosById.ContainsKey(itemDto.Item.Id) ? itemDtosById[itemDto.Item.Id].Recipes : new List<RecipeDto>();
             }
         }
     }
