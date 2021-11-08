@@ -14,7 +14,7 @@ namespace KitchenServiceV2
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseKestrel()
-                .UseUrls("http://localhost:57236")
+                .UseUrls("https://localhost:57238;http://localhost:57236/")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .Build();

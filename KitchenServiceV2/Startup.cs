@@ -14,7 +14,7 @@ namespace KitchenServiceV2
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -48,7 +48,7 @@ namespace KitchenServiceV2
             // Auto mapper
             AutoMapperConfig.InitializeMapper();
 
-            services.AddMvc();
+            services.AddControllers();
             services.AddCors();
 
             services.AddAuthentication(Microsoft.AspNetCore.Server.HttpSys.HttpSysDefaults.AuthenticationScheme)
@@ -68,7 +68,7 @@ namespace KitchenServiceV2
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             // Shows UseCors with CorsPolicyBuilder.
             var origins = Configuration
@@ -79,8 +79,12 @@ namespace KitchenServiceV2
             app.UseCors(builder => builder.WithOrigins(origins).AllowAnyMethod().AllowAnyHeader());
 
             app.UseAuthentication();
+            app.UseRouting();
             app.UseMiddleware(typeof(ErrorHandlingMiddleware));
-            app.UseMvc();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }
